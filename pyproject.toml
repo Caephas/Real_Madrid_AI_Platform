@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "real-madrid-ai-project"
+version = "0.1.0"
+description = ""
+authors = ["Caephas <arinzeobidiegwu@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11.3,<3.13"
+firebase-admin = "^6.6.0"
+fastapi = "^0.115.6"
+uvicorn = "^0.34.0"
+pandas = "^2.2.3"
+vadersentiment = "^3.3.2"
+scikit-learn = "^1.6.0"
+tensorflow = "^2.18.0"
+torch = "^2.5.1"
+transformers = "^4.47.1"
+nltk = "^3.9.1"
+requests = "^2.32.3"
+aiohttp = "^3.11.11"
+feedparser = "^6.0.11"
+spacy = "^3.8.3"
+python-dotenv = "^1.0.1"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+black = "^24.10.0"
+isort = "^5.13.2"
+flake8 = "^7.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

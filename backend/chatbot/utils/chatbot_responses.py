@@ -1,37 +1,31 @@
-import requests
+import subprocess
 
-def get_chatbot_response(user_input: str) -> str:
+
+def run_llama_query(query: str) -> str:
     """
-    Generate a chatbot response based on user input.
+    Run a query against the downloaded model using Llama.cpp.
     """
-    user_input = user_input.lower()
+    # Format the query as required
+    formatted_query = f"""
+    Below is a question and its corresponding factual answer. Provide an accurate response to the question.
 
-    # 1. General Info
-    if "captain" in user_input:
-        return "Real Madrid's captain is Sergio Ramos."  # Example, update with dynamic logic
-    elif "trophies" in user_input:
-        return "Real Madrid has won 35 La Liga titles and 14 UEFA Champions League trophies."
+    ### Question:
+    {query}
 
-    # 2. Match Info
-    elif "next match" in user_input:
-        # Replace with real-time match info logic
-        return "Real Madrid's next match is against Barcelona on Sunday at 8 PM."
-    elif "last match" in user_input:
-        # Replace with last match result logic
-        return "Real Madrid's last match ended in a 2-1 victory over Atletico Madrid."
+    ### Answer:
+    """
 
-    # 3. Match Prediction
-    elif "prediction" in user_input:
-        # Example of match prediction
-        prediction = {"outcome": "Win"}  # Replace with actual prediction logic
-        return f"The predicted outcome for the next match is: {prediction['outcome']}."
+    # Run the Llama.cpp CLI with the query
+    process = subprocess.run(
+        [
+            "llama-cli",  # Replace with the path to your llama.cpp binary if necessary
+            "--model", "/Users/caephas/Downloads/unsloth.Q8_0.gguf",  # Replace with your local GGUF model path
+            "-p", formatted_query
+        ],
+        capture_output=True,
+        text=True
+    )
 
-    # 4. Content Recommendations
-    elif "news" in user_input or "articles" in user_input:
-        # Replace with content personalization logic
-        articles = ["Real Madrid signs new player!", "Match preview: Real Madrid vs. Barcelona"]
-        return f"Here are the latest news articles about Real Madrid: {', '.join(articles)}"
-
-    # Default response
-    else:
-        return "I'm sorry, I didn't understand that. Can you try rephrasing?"
+    # Extract and return the response
+    response = process.stdout.strip()
+    return response

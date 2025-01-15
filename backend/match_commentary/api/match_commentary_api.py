@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from backend.match_commentary.utils.api_football import  fetch_live_match_events
 from backend.match_commentary.utils.commentary import generate_commentary
 from backend.shared.firestore import store_events_in_firestore
+
 app = FastAPI()
 
 @app.get("/")

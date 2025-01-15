@@ -1,0 +1,248 @@
+date,time,comp,round,day,venue,result,gf,ga,opponent,xg,xga,poss,attendance,captain,formation,opp formation,referee,match report,notes,sh,sot,dist,fk,pk,pkatt,season,team
+2024-08-18,21:30,La Liga,Matchweek 1,Sun,Away,D,1.0,1.0,Mallorca,0.6,1.0,66.0,23010.0,Dani Carvajal,4-3-3,4-3-3,,Match Report,,13.0,5.0,21.3,0.0,0,0,2025,Real Madrid
+2024-08-25,17:00,La Liga,Matchweek 2,Sun,Home,W,3.0,0.0,Valladolid,2.1,0.4,63.0,70178.0,Dani Carvajal,4-2-3-1,4-1-4-1,,Match Report,,17.0,9.0,17.2,1.0,0,0,2025,Real Madrid
+2024-08-29,20:30,La Liga,Matchweek 3,Thu,Away,D,1.0,1.0,Las Palmas,2.5,0.8,57.0,31192.0,Luka Modrić,4-2-3-1,4-1-4-1,Mateo Busquets,Match Report,,24.0,7.0,18.0,1.0,1,1,2025,Real Madrid
+2024-09-01,21:30,La Liga,Matchweek 4,Sun,Home,W,2.0,0.0,Betis,2.4,0.6,60.0,73072.0,Dani Carvajal,4-3-3,4-2-3-1,Javier Alberola,Match Report,,21.0,6.0,16.3,0.0,1,1,2025,Real Madrid
+2024-09-14,21:00,La Liga,Matchweek 5,Sat,Away,W,2.0,0.0,Real Sociedad,2.3,1.1,52.0,37370.0,Luka Modrić,4-2-3-1,4-5-1,Juan Martínez,Match Report,,14.0,4.0,19.4,1.0,2,2,2025,Real Madrid
+2024-09-21,21:00,La Liga,Matchweek 6,Sat,Home,W,4.0,1.0,Espanyol,4.4,0.3,73.0,17284.0,Luka Modrić,4-3-3,5-3-2,José Luis Munuera,Match Report,,30.0,13.0,17.4,0.0,1,1,2025,Real Madrid
+2024-09-24,21:00,La Liga,Matchweek 7,Tue,Home,W,3.0,2.0,Alavés,1.3,0.9,68.0,67480.0,Lucas Vázquez,4-3-3,4-4-2,Alejandro Muñíz,Match Report,,10.0,4.0,14.7,1.0,0,0,2025,Real Madrid
+2024-09-29,21:00,La Liga,Matchweek 8,Sun,Away,D,1.0,1.0,Atlético Madrid,0.8,1.3,49.0,70112.0,Luka Modrić,4-4-2,4-4-2,Mateo Busquets,Match Report,,12.0,4.0,20.4,0.0,0,0,2025,Real Madrid
+2024-10-05,21:00,La Liga,Matchweek 9,Sat,Home,W,2.0,0.0,Villarreal,0.5,1.1,55.0,73842.0,Luka Modrić,4-4-2,4-3-3,Guillermo Cuadra,Match Report,,11.0,2.0,22.0,0.0,0,0,2025,Real Madrid
+2024-10-19,21:00,La Liga,Matchweek 10,Sat,Away,W,2.0,1.0,Celta Vigo,0.7,1.8,53.0,24445.0,Lucas Vázquez,3-4-3,3-4-3,Alejandro Hernández,Match Report,,10.0,3.0,18.6,0.0,0,0,2025,Real Madrid
+2024-10-26,21:00,La Liga,Matchweek 11,Sat,Home,L,0.0,4.0,Barcelona,1.5,2.6,43.0,78192.0,Lucas Vázquez,4-4-2,4-2-3-1,Jose Maria Sánchez,Match Report,,9.0,4.0,23.7,0.0,0,0,2025,Real Madrid
+2024-11-09,14:00,La Liga,Matchweek 13,Sat,Home,W,4.0,0.0,Osasuna,3.1,0.1,68.0,72462.0,Lucas Vázquez,4-3-3,4-3-3,Mario Melero,Match Report,,18.0,8.0,15.2,1.0,0,0,2025,Real Madrid
+2024-11-24,18:30,La Liga,Matchweek 14,Sun,Away,W,3.0,0.0,Leganés,1.8,0.1,67.0,12338.0,Federico Valverde,4-4-2,3-4-3,Javier Alberola,Match Report,,16.0,8.0,15.6,1.0,0,0,2025,Real Madrid
+2024-12-01,16:15,La Liga,Matchweek 15,Sun,Home,W,2.0,0.0,Getafe,3.2,0.5,69.0,74341.0,Lucas Vázquez,4-3-3,4-4-2,Alejandro Hernández,Match Report,,12.0,3.0,17.6,0.0,1,1,2025,Real Madrid
+2024-12-04,21:00,La Liga,Matchweek 19,Wed,Away,L,1.0,2.0,Athletic Club,1.7,1.8,63.0,51364.0,Lucas Vázquez,4-4-2,4-2-3-1,Jose Maria Sánchez,Match Report,,9.0,4.0,17.5,0.0,0,1,2025,Real Madrid
+2024-12-07,21:00,La Liga,Matchweek 16,Sat,Away,W,3.0,0.0,Girona,0.9,0.4,58.0,13827.0,Luka Modrić,4-2-3-1,4-2-3-1,Jesús Gil,Match Report,,10.0,7.0,19.3,0.0,0,0,2025,Real Madrid
+2024-12-14,21:00,La Liga,Matchweek 17,Sat,Away,D,3.0,3.0,Rayo Vallecano,0.7,1.6,66.0,14168.0,Luka Modrić,4-2-3-1,4-4-2,Juan Martínez,Match Report,,13.0,6.0,21.6,0.0,0,0,2025,Real Madrid
+2024-12-22,16:15,La Liga,Matchweek 18,Sun,Home,W,4.0,2.0,Sevilla,2.0,1.3,59.0,75227.0,Lucas Vázquez,4-2-3-1,4-4-2,Isidro Díaz de Mera,Match Report,,16.0,7.0,14.6,0.0,0,0,2025,Real Madrid
+2025-01-03,21:00,La Liga,Matchweek 12,Fri,Away,W,2.0,1.0,Valencia,2.7,1.3,62.0,46420.0,Lucas Vázquez,4-2-3-1,4-4-2,César Soto,Match Report,,16.0,5.0,21.5,0.0,0,1,2025,Real Madrid
+2023-08-12,21:30,La Liga,Matchweek 1,Sat,Away,W,2,0,Athletic Club,0.9,0.4,54.0,48927.0,Dani Carvajal,4-1-2-1-2◆,4-2-3-1,Jesús Gil,Match Report,,14.0,8.0,16.0,2.0,0,0,2024,Real Madrid
+2023-08-19,19:30,La Liga,Matchweek 2,Sat,Away,W,3,1,Almería,2.0,1.3,57.0,17561.0,Dani Carvajal,4-3-1-2,4-2-3-1,José Sánchez,Match Report,,25.0,9.0,17.0,1.0,0,0,2024,Real Madrid
+2023-08-25,21:30,La Liga,Matchweek 3,Fri,Away,W,1,0,Celta Vigo,1.4,1.2,63.0,23057.0,Dani Carvajal,4-1-2-1-2◆,5-3-2,Isidro Díaz de Mera,Match Report,,9.0,2.0,19.4,0.0,0,1,2024,Real Madrid
+2023-09-02,16:15,La Liga,Matchweek 4,Sat,Home,W,2,1,Getafe,2.8,0.4,76.0,66747.0,Luka Modrić,4-3-1-2,4-1-3-2,Mario Melero,Match Report,,26.0,12.0,17.7,0.0,0,0,2024,Real Madrid
+2023-09-17,21:00,La Liga,Matchweek 5,Sun,Home,W,2,1,Real Sociedad,2.0,1.6,52.0,70092.0,Dani Carvajal,4-1-2-1-2◆,4-3-3,César Soto,Match Report,,17.0,8.0,15.9,1.0,0,0,2024,Real Madrid
+2023-09-24,21:00,La Liga,Matchweek 6,Sun,Away,L,1,3,Atlético Madrid,1.0,1.4,63.0,69082.0,Luka Modrić,4-1-2-1-2◆,5-3-2,Javier Alberola,Match Report,,20.0,5.0,21.5,1.0,0,0,2024,Real Madrid
+2023-09-27,19:00,La Liga,Matchweek 7,Wed,Home,W,2,0,Las Palmas,1.7,0.7,48.0,65017.0,Nacho,4-3-1-2,4-5-1,José Luis Munuera,Match Report,,21.0,9.0,16.4,0.0,0,0,2024,Real Madrid
+2023-09-30,18:30,La Liga,Matchweek 8,Sat,Away,W,3,0,Girona,2.3,1.6,48.0,14184.0,Nacho,4-3-1-2,4-1-4-1,Juan Pulido,Match Report,,14.0,7.0,16.2,0.0,0,0,2024,Real Madrid
+2023-10-07,16:15,La Liga,Matchweek 9,Sat,Home,W,4,0,Osasuna,3.2,0.5,67.0,70864.0,Luka Modrić,4-3-1-2,4-3-3,Guillermo Cuadra,Match Report,,18.0,8.0,16.0,0.0,0,1,2024,Real Madrid
+2023-10-21,18:30,La Liga,Matchweek 10,Sat,Away,D,1,1,Sevilla,1.6,1.5,51.0,41212.0,Dani Carvajal,4-1-2-1-2◆,4-3-3,Ricardo de Burgos,Match Report,,14.0,4.0,15.7,1.0,0,0,2024,Real Madrid
+2023-10-28,16:15,La Liga,Matchweek 11,Sat,Away,W,2,1,Barcelona,1.1,1.5,47.0,50112.0,Dani Carvajal,4-1-3-2,3-4-1-2,Jesús Gil,Match Report,,13.0,4.0,21.9,0.0,0,0,2024,Real Madrid
+2023-11-05,21:00,La Liga,Matchweek 12,Sun,Home,D,0,0,Rayo Vallecano,2.2,0.1,63.0,70220.0,Luka Modrić,4-3-1-2,4-1-4-1,Juan Martínez,Match Report,,22.0,5.0,18.4,1.0,0,0,2024,Real Madrid
+2023-11-11,21:00,La Liga,Matchweek 13,Sat,Home,W,5,1,Valencia,1.7,1.7,56.0,72475.0,Nacho,4-4-2,4-2-3-1,José Sánchez,Match Report,,16.0,7.0,18.3,3.0,0,0,2024,Real Madrid
+2023-11-26,18:30,La Liga,Matchweek 14,Sun,Away,W,3,0,Cádiz,1.6,1.2,61.0,20325.0,Nacho,4-2-2-2,5-4-1,Guillermo Cuadra,Match Report,,14.0,5.0,18.8,1.0,0,0,2024,Real Madrid
+2023-12-02,18:30,La Liga,Matchweek 15,Sat,Home,W,2,0,Granada,1.8,0.1,71.0,70685.0,Dani Carvajal,4-4-2,4-4-2,Pablo González,Match Report,,11.0,4.0,17.2,0.0,0,0,2024,Real Madrid
+2023-12-09,16:15,La Liga,Matchweek 16,Sat,Away,D,1,1,Betis,1.0,1.3,63.0,52756.0,Luka Modrić,4-2-3-1,4-2-3-1,César Soto,Match Report,,12.0,2.0,18.8,1.0,0,0,2024,Real Madrid
+2023-12-17,21:00,La Liga,Matchweek 17,Sun,Home,W,4,1,Villarreal,2.3,0.8,60.0,70500.0,Luka Modrić,4-4-2,4-4-2,Jorge Figueroa,Match Report,,22.0,9.0,16.9,1.0,0,0,2024,Real Madrid
+2023-12-21,21:30,La Liga,Matchweek 18,Thu,Away,W,1,0,Alavés,0.6,0.6,60.0,19275.0,Nacho,4-3-1-2,4-2-3-1,Isidro Díaz de Mera,Match Report,,9.0,4.0,18.4,0.0,0,0,2024,Real Madrid
+2024-01-03,19:15,La Liga,Matchweek 19,Wed,Home,W,1,0,Mallorca,1.7,0.6,67.0,72394.0,Luka Modrić,4-2-2-2,5-4-1,Alejandro Muñíz,Match Report,,17.0,5.0,18.8,3.0,0,0,2024,Real Madrid
+2024-01-21,16:15,La Liga,Matchweek 21,Sun,Home,W,3,2,Almería,2.2,0.9,73.0,72044.0,Nacho,4-3-1-2,5-4-1,Francisco Hernández,Match Report,,17.0,5.0,16.0,0.0,1,1,2024,Real Madrid
+2024-01-27,15:15,La Liga,Matchweek 22,Sat,Away,W,2,1,Las Palmas,2.3,0.7,47.0,32037.0,Nacho,4-3-1-2,4-5-1,César Soto,Match Report,,13.0,5.0,13.2,1.0,0,0,2024,Real Madrid
+2024-02-01,21:00,La Liga,Matchweek 20,Thu,Away,W,2,0,Getafe,2.0,0.8,58.0,15264.0,Nacho,4-3-1-2,4-4-2,Ricardo de Burgos,Match Report,,16.0,9.0,16.7,0.0,0,0,2024,Real Madrid
+2024-02-04,21:00,La Liga,Matchweek 23,Sun,Home,D,1,1,Atlético Madrid,1.9,1.1,54.0,76732.0,Nacho,4-3-1-2,3-5-2,José Sánchez,Match Report,,17.0,4.0,16.0,0.0,0,0,2024,Real Madrid
+2024-02-10,18:30,La Liga,Matchweek 24,Sat,Home,W,4,0,Girona,3.2,0.3,53.0,76585.0,Dani Carvajal,4-3-1-2,4-2-3-1,Juan Martínez,Match Report,,15.0,6.0,15.7,0.0,0,1,2024,Real Madrid
+2024-02-18,14:00,La Liga,Matchweek 25,Sun,Away,D,1,1,Rayo Vallecano,1.1,1.1,59.0,14354.0,Nacho,4-2-3-1,4-4-2,Alejandro Muñíz,Match Report,,11.0,4.0,17.9,1.0,0,0,2024,Real Madrid
+2024-02-25,21:00,La Liga,Matchweek 26,Sun,Home,W,1,0,Sevilla,1.0,0.8,64.0,74969.0,Nacho,4-3-3,5-3-2,Isidro Díaz de Mera,Match Report,,16.0,6.0,20.0,1.0,0,0,2024,Real Madrid
+2024-03-02,21:00,La Liga,Matchweek 27,Sat,Away,D,2,2,Valencia,2.2,1.1,70.0,47427.0,Dani Carvajal,4-3-1-2,4-4-2,Jesús Gil,Match Report,,10.0,5.0,15.6,1.0,0,0,2024,Real Madrid
+2024-03-10,18:30,La Liga,Matchweek 28,Sun,Home,W,4,0,Celta Vigo,3.4,0.8,62.0,73644.0,Nacho,4-3-1-2,5-3-2,Mario Melero,Match Report,,25.0,13.0,13.8,0.0,0,0,2024,Real Madrid
+2024-03-16,16:15,La Liga,Matchweek 29,Sat,Away,W,4,2,Osasuna,2.9,0.7,64.0,22430.0,Dani Carvajal,4-3-3,3-5-2,Juan Martínez,Match Report,,17.0,9.0,18.6,0.0,0,0,2024,Real Madrid
+2024-03-31,21:00,La Liga,Matchweek 30,Sun,Home,W,2,0,Athletic Club,1.1,0.3,58.0,72991.0,Nacho,4-2-2-2,4-2-3-1,Javier Alberola,Match Report,,9.0,4.0,18.8,0.0,0,0,2024,Real Madrid
+2024-04-13,18:30,La Liga,Matchweek 31,Sat,Away,W,1,0,Mallorca,1.5,0.6,56.0,23244.0,Nacho,4-2-3-1,5-4-1,José Sánchez,Match Report,,16.0,8.0,20.3,1.0,0,0,2024,Real Madrid
+2024-04-21,21:00,La Liga,Matchweek 32,Sun,Home,W,3,2,Barcelona,2.3,1.4,47.0,77981.0,Luka Modrić,4-1-2-1-2◆,4-3-3,César Soto,Match Report,,13.0,7.0,19.1,0.0,1,1,2024,Real Madrid
+2024-04-26,21:00,La Liga,Matchweek 33,Fri,Away,W,1,0,Real Sociedad,0.4,0.6,44.0,37109.0,Nacho,4-2-3-1,4-1-4-1,José Luis Munuera,Match Report,,5.0,3.0,23.1,0.0,0,0,2024,Real Madrid
+2024-05-04,16:15,La Liga,Matchweek 34,Sat,Home,W,3,0,Cádiz,2.3,0.9,70.0,72654.0,Nacho,4-3-3,4-5-1,Javier Villanueva,Match Report,,19.0,9.0,19.1,1.0,0,0,2024,Real Madrid
+2024-05-11,18:30,La Liga,Matchweek 35,Sat,Away,W,4,0,Granada,1.5,1.0,58.0,20058.0,Luka Modrić,4-3-3,4-4-2,Pablo González,Match Report,,13.0,7.0,15.4,0.0,0,0,2024,Real Madrid
+2024-05-14,21:30,La Liga,Matchweek 36,Tue,Home,W,5,0,Alavés,2.5,1.3,71.0,68954.0,Nacho,4-3-1-2,4-2-3-1,Mateo Busquets,Match Report,,22.0,11.0,16.0,1.0,0,0,2024,Real Madrid
+2024-05-19,19:00,La Liga,Matchweek 37,Sun,Away,D,4,4,Villarreal,1.0,1.7,57.0,21671.0,Luka Modrić,4-2-3-1,4-4-2,Alejandro Hernández,Match Report,,12.0,6.0,17.9,0.0,0,0,2024,Real Madrid
+2024-05-25,21:00,La Liga,Matchweek 38,Sat,Home,D,0,0,Betis,1.0,0.7,59.0,73614.0,Nacho,4-3-1-2,4-4-1-1,Isidro Díaz de Mera,Match Report,,13.0,4.0,18.8,1.0,0,0,2024,Real Madrid
+2022-08-14,22:00,La Liga,Matchweek 1,Sun,Away,W,2,1,Almería,2.1,0.7,67.0,14386.0,Karim Benzema,4-3-3,5-3-2,Juan Martínez,Match Report,,29.0,15.0,17.6,1.0,0,0,2023,Real Madrid
+2022-08-20,22:00,La Liga,Matchweek 2,Sat,Away,W,4,1,Celta Vigo,3.7,1.4,49.0,15681.0,Karim Benzema,4-3-3,4-1-3-2,Jesús Gil,Match Report,,14.0,5.0,18.2,0.0,1,2,2023,Real Madrid
+2022-08-28,22:00,La Liga,Matchweek 3,Sun,Away,W,3,1,Espanyol,2.1,1.3,64.0,25778.0,Karim Benzema,4-3-3,4-1-4-1,Mario Melero,Match Report,,19.0,6.0,16.2,1.0,0,0,2023,Real Madrid
+2022-09-03,16:15,La Liga,Matchweek 4,Sat,Home,W,2,1,Betis,2.9,0.5,49.0,58579.0,Karim Benzema,4-3-3,4-2-3-1,José Sánchez,Match Report,,22.0,4.0,18.5,3.0,0,0,2023,Real Madrid
+2022-09-11,14:00,La Liga,Matchweek 5,Sun,Home,W,4,1,Mallorca,2.3,0.5,68.0,54816.0,Toni Kroos,4-3-3,5-3-2,Jorge Figueroa,Match Report,,22.0,7.0,22.3,2.0,0,0,2023,Real Madrid
+2022-09-18,21:00,La Liga,Matchweek 6,Sun,Away,W,2,1,Atlético Madrid,0.9,1.0,46.0,66881.0,Luka Modrić,4-3-3,3-5-2,José Luis Munuera,Match Report,,6.0,3.0,17.4,1.0,0,0,2023,Real Madrid
+2022-10-02,21:00,La Liga,Matchweek 7,Sun,Home,D,1,1,Osasuna,2.5,0.5,64.0,55410.0,Karim Benzema,4-3-3,4-1-4-1,Guillermo Cuadra,Match Report,,21.0,4.0,19.7,0.0,0,1,2023,Real Madrid
+2022-10-08,21:00,La Liga,Matchweek 8,Sat,Away,W,1,0,Getafe,1.4,0.3,65.0,14502.0,Luka Modrić,4-3-3,5-3-2,Antonio Matéu Lahoz,Match Report,,19.0,4.0,23.0,0.0,0,0,2023,Real Madrid
+2022-10-16,16:15,La Liga,Matchweek 9,Sun,Home,W,3,1,Barcelona,1.1,2.0,44.0,62876.0,Karim Benzema,4-3-3,4-3-3,José Sánchez,Match Report,,7.0,3.0,19.2,0.0,1,1,2023,Real Madrid
+2022-10-19,21:00,La Liga,Matchweek 10,Wed,Away,W,3,0,Elche,1.5,0.8,62.0,30236.0,Karim Benzema,4-3-3,4-1-4-1,Jesús Gil,Match Report,,10.0,6.0,16.8,0.0,0,0,2023,Real Madrid
+2022-10-22,21:00,La Liga,Matchweek 11,Sat,Home,W,3,1,Sevilla,3.0,0.5,56.0,59625.0,Luka Modrić,4-3-3,4-3-3,Alejandro Hernández,Match Report,,18.0,6.0,20.1,1.0,0,0,2023,Real Madrid
+2022-10-30,16:15,La Liga,Matchweek 12,Sun,Home,D,1,1,Girona,2.9,1.4,58.0,58367.0,Luka Modrić,4-3-3,4-1-4-1,Mario Melero,Match Report,,19.0,6.0,18.8,1.0,0,0,2023,Real Madrid
+2022-11-07,21:00,La Liga,Matchweek 13,Mon,Away,L,2,3,Rayo Vallecano,2.4,1.5,54.0,14216.0,Luka Modrić,4-3-3,4-2-3-1,Juan Martínez,Match Report,,15.0,1.0,21.1,1.0,1,1,2023,Real Madrid
+2022-11-10,21:30,La Liga,Matchweek 14,Thu,Home,W,2,1,Cádiz,2.0,0.9,66.0,53190.0,Luka Modrić,4-3-3,4-4-2,César Soto,Match Report,,18.0,5.0,20.2,0.0,0,0,2023,Real Madrid
+2022-12-30,21:30,La Liga,Matchweek 15,Fri,Away,W,2,0,Valladolid,2.3,0.6,61.0,25950.0,Karim Benzema,4-3-3,4-3-3,José Luis Munuera,Match Report,,18.0,6.0,16.0,0.0,1,1,2023,Real Madrid
+2023-01-07,16:15,La Liga,Matchweek 16,Sat,Away,L,1,2,Villarreal,2.2,3.0,51.0,21088.0,Karim Benzema,4-3-3,4-3-3,César Soto,Match Report,,12.0,2.0,15.5,1.0,1,1,2023,Real Madrid
+2023-01-22,21:00,La Liga,Matchweek 18,Sun,Away,W,2,0,Athletic Club,1.1,1.1,49.0,49316.0,Karim Benzema,4-3-3,4-2-3-1,José Sánchez,Match Report,,10.0,4.0,14.9,0.0,0,0,2023,Real Madrid
+2023-01-29,21:00,La Liga,Matchweek 19,Sun,Home,D,0,0,Real Sociedad,1.3,0.4,61.0,58129.0,Karim Benzema,4-3-3,4-3-3,Mario Melero,Match Report,,20.0,7.0,20.6,1.0,0,0,2023,Real Madrid
+2023-02-02,21:00,La Liga,Matchweek 17,Thu,Home,W,2,0,Valencia,2.3,0.2,70.0,51926.0,Karim Benzema,4-3-3,4-3-3,Alberola Rojas,Match Report,,19.0,7.0,17.4,1.0,0,0,2023,Real Madrid
+2023-02-05,14:00,La Liga,Matchweek 20,Sun,Away,L,0,1,Mallorca,1.7,0.2,73.0,18258.0,Nacho,4-3-3,5-4-1,Alejandro Hernández,Match Report,,19.0,0.0,23.5,2.0,0,1,2023,Real Madrid
+2023-02-15,21:00,La Liga,Matchweek 21,Wed,Home,W,4,0,Elche,4.1,0.6,72.0,44319.0,Karim Benzema,4-3-3,3-5-2,Ricardo de Burgos,Match Report,,24.0,11.0,18.2,2.0,2,2,2023,Real Madrid
+2023-02-18,21:00,La Liga,Matchweek 22,Sat,Away,W,2,0,Osasuna,1.3,0.5,53.0,21668.0,Nacho,4-3-3,4-2-3-1,José Luis Munuera,Match Report,,11.0,6.0,17.5,0.0,0,0,2023,Real Madrid
+2023-02-25,18:30,La Liga,Matchweek 23,Sat,Home,D,1,1,Atlético Madrid,1.6,0.3,62.0,64721.0,Karim Benzema,4-3-3,4-4-2,Jesús Gil,Match Report,,18.0,7.0,19.4,0.0,0,0,2023,Real Madrid
+2023-03-05,21:00,La Liga,Matchweek 24,Sun,Away,D,0,0,Betis,1.5,0.5,63.0,52212.0,Karim Benzema,4-4-2,4-2-3-1,César Soto,Match Report,,15.0,5.0,18.2,1.0,0,0,2023,Real Madrid
+2023-03-11,14:00,La Liga,Matchweek 25,Sat,Home,W,3,1,Espanyol,1.7,1.2,71.0,59872.0,Nacho,4-3-3,4-4-2,Jorge Figueroa,Match Report,,22.0,7.0,20.3,2.0,0,0,2023,Real Madrid
+2023-03-19,21:00,La Liga,Matchweek 26,Sun,Away,L,1,2,Barcelona,0.5,1.6,46.0,95745.0,Karim Benzema,4-2-3-1,4-3-3,Ricardo de Burgos,Match Report,,11.0,3.0,20.3,0.0,0,0,2023,Real Madrid
+2023-04-02,16:15,La Liga,Matchweek 27,Sun,Home,W,6,0,Valladolid,4.5,0.8,60.0,59400.0,Karim Benzema,4-2-3-1,3-5-2,Juan Pulido,Match Report,,29.0,17.0,14.7,0.0,0,0,2023,Real Madrid
+2023-04-08,21:00,La Liga,Matchweek 28,Sat,Home,L,2,3,Villarreal,2.4,1.5,49.0,57887.0,Karim Benzema,4-3-3,4-3-3,Alberola Rojas,Match Report,,18.0,4.0,14.6,2.0,0,0,2023,Real Madrid
+2023-04-15,21:00,La Liga,Matchweek 29,Sat,Away,W,2,0,Cádiz,3.5,0.7,69.0,19833.0,Karim Benzema,4-3-3,4-4-2,Jesús Gil,Match Report,,35.0,11.0,16.8,1.0,0,0,2023,Real Madrid
+2023-04-22,21:00,La Liga,Matchweek 30,Sat,Home,W,2,0,Celta Vigo,1.5,0.9,66.0,60386.0,Karim Benzema,4-3-3,4-4-2,Antonio Matéu,Match Report,,17.0,5.0,16.6,1.0,0,0,2023,Real Madrid
+2023-04-25,19:30,La Liga,Matchweek 31,Tue,Away,L,2,4,Girona,1.8,2.3,71.0,13306.0,Nacho,4-3-3,4-1-4-1,Javier Villanueva,Match Report,,18.0,3.0,17.0,0.0,0,0,2023,Real Madrid
+2023-04-29,18:30,La Liga,Matchweek 32,Sat,Home,W,4,2,Almería,2.8,1.3,68.0,58036.0,Karim Benzema,4-3-3,4-5-1,Guillermo Cuadra,Match Report,,14.0,7.0,19.6,1.0,1,1,2023,Real Madrid
+2023-05-02,22:00,La Liga,Matchweek 33,Tue,Away,L,0,2,Real Sociedad,0.8,1.9,47.0,35314.0,Nacho,4-3-3,4-1-4-1,Juan Pulido,Match Report,,10.0,4.0,20.1,1.0,0,0,2023,Real Madrid
+2023-05-13,21:00,La Liga,Matchweek 34,Sat,Home,W,1,0,Getafe,0.9,0.7,75.0,52201.0,Nacho,4-3-3,4-3-3,Juan Martínez,Match Report,,16.0,3.0,23.8,1.0,0,0,2023,Real Madrid
+2023-05-21,18:30,La Liga,Matchweek 35,Sun,Away,L,0,1,Valencia,1.4,1.0,73.0,46002.0,Karim Benzema,4-3-3,4-2-3-1,Ricardo de Burgos,Match Report,,13.0,5.0,16.5,3.0,0,0,2023,Real Madrid
+2023-05-24,19:30,La Liga,Matchweek 36,Wed,Home,W,2,1,Rayo Vallecano,1.3,0.7,61.0,45811.0,Karim Benzema,4-1-4-1,4-2-3-1,Jesús Gil,Match Report,,12.0,3.0,19.2,0.0,0,0,2023,Real Madrid
+2023-05-27,19:00,La Liga,Matchweek 37,Sat,Away,W,2,1,Sevilla,0.8,1.2,67.0,29856.0,Luka Modrić,4-3-3,4-2-3-1,César Soto,Match Report,,6.0,3.0,18.6,1.0,0,0,2023,Real Madrid
+2023-06-04,18:30,La Liga,Matchweek 38,Sun,Home,D,1,1,Athletic Club,1.8,2.3,64.0,60781.0,Karim Benzema,4-3-3,4-2-3-1,Isidro Díaz de Mera,Match Report,,8.0,1.0,17.9,0.0,1,1,2023,Real Madrid
+2021-08-14,22:00,La Liga,Matchweek 1,Sat,Away,W,4,1,Alavés,1.7,1.7,58.0,3968.0,Karim Benzema,4-3-3,4-2-3-1,César Soto,Match Report,,19.0,7.0,18.7,2.0,0,0,2022,Real Madrid
+2021-08-22,22:00,La Liga,Matchweek 2,Sun,Away,D,3,3,Levante,1.6,1.9,61.0,9838.0,Karim Benzema,4-3-3,4-3-3,Guillermo Cuadra,Match Report,,20.0,5.0,20.4,1.0,0,0,2022,Real Madrid
+2021-08-28,22:00,La Liga,Matchweek 3,Sat,Away,W,1,0,Betis,0.9,0.6,50.0,22590.0,Karim Benzema,4-3-3,4-2-3-1,Alejandro Hernández,Match Report,,13.0,3.0,18.3,0.0,0,0,2022,Real Madrid
+2021-09-12,21:00,La Liga,Matchweek 4,Sun,Home,W,5,2,Celta Vigo,3.2,1.8,60.0,19874.0,Karim Benzema,4-4-2,4-1-3-2,José Sánchez,Match Report,,14.0,10.0,12.8,0.0,1,1,2022,Real Madrid
+2021-09-19,21:00,La Liga,Matchweek 5,Sun,Away,W,2,1,Valencia,1.3,0.9,61.0,26689.0,Karim Benzema,4-4-1-1,4-4-2,Pablo González,Match Report,,18.0,10.0,18.4,0.0,0,0,2022,Real Madrid
+2021-09-22,22:00,La Liga,Matchweek 6,Wed,Home,W,6,1,Mallorca,2.6,1.4,59.0,20113.0,Karim Benzema,4-3-3,4-2-3-1,Alberola Rojas,Match Report,,18.0,11.0,15.2,0.0,0,0,2022,Real Madrid
+2021-09-25,21:00,La Liga,Matchweek 7,Sat,Home,D,0,0,Villarreal,1.1,0.5,48.0,23985.0,Karim Benzema,4-3-3,4-3-3,Jesús Gil,Match Report,,15.0,2.0,19.2,0.0,0,0,2022,Real Madrid
+2021-10-03,16:15,La Liga,Matchweek 8,Sun,Away,L,1,2,Espanyol,1.6,1.2,65.0,23377.0,Karim Benzema,4-1-3-2,4-1-4-1,Guillermo Cuadra,Match Report,,18.0,4.0,18.1,2.0,0,0,2022,Real Madrid
+2021-10-24,16:15,La Liga,Matchweek 10,Sun,Away,W,2,1,Barcelona,1.5,1.6,49.0,86422.0,Karim Benzema,4-3-3,4-3-3,José Sánchez,Match Report,,10.0,5.0,13.5,0.0,0,0,2022,Real Madrid
+2021-10-27,21:30,La Liga,Matchweek 11,Wed,Home,D,0,0,Osasuna,0.7,0.5,74.0,35691.0,Karim Benzema,4-3-3,5-3-2,César Soto,Match Report,,17.0,3.0,24.6,1.0,0,0,2022,Real Madrid
+2021-10-30,14:00,La Liga,Matchweek 12,Sat,Away,W,2,1,Elche,1.1,1.1,56.0,23010.0,Marcelo,4-3-3,4-4-1-1,Ricardo de Burgos,Match Report,,17.0,5.0,17.0,0.0,0,0,2022,Real Madrid
+2021-11-06,21:00,La Liga,Matchweek 13,Sat,Home,W,2,1,Rayo Vallecano,2.1,1.4,54.0,43283.0,Karim Benzema,4-3-3,4-2-3-1,Pablo González,Match Report,,15.0,6.0,13.4,0.0,0,0,2022,Real Madrid
+2021-11-21,16:15,La Liga,Matchweek 14,Sun,Away,W,4,1,Granada,3.5,0.7,68.0,17460.0,Karim Benzema,4-3-3,4-4-2,Juan Martínez,Match Report,,21.0,9.0,15.9,0.0,0,0,2022,Real Madrid
+2021-11-28,21:00,La Liga,Matchweek 15,Sun,Home,W,2,1,Sevilla,1.2,0.7,53.0,45281.0,Karim Benzema,4-3-3,4-3-3,José Sánchez,Match Report,,14.0,4.0,22.1,1.0,0,0,2022,Real Madrid
+2021-12-01,21:00,La Liga,Matchweek 9,Wed,Home,W,1,0,Athletic Club,1.8,2.4,62.0,33627.0,Karim Benzema,4-3-3,4-4-2,Isidro Díaz de Mera,Match Report,,17.0,7.0,21.1,0.0,0,0,2022,Real Madrid
+2021-12-04,21:00,La Liga,Matchweek 16,Sat,Away,W,2,0,Real Sociedad,1.6,0.7,49.0,35765.0,Karim Benzema,4-3-3,4-4-2,Jesús Gil,Match Report,,13.0,8.0,16.1,1.0,0,0,2022,Real Madrid
+2021-12-12,21:00,La Liga,Matchweek 17,Sun,Home,W,2,0,Atlético Madrid,0.4,0.7,61.0,51024.0,Karim Benzema,4-3-3,4-4-2,Antonio Matéu Lahoz,Match Report,,7.0,3.0,16.6,0.0,0,0,2022,Real Madrid
+2021-12-19,21:00,La Liga,Matchweek 18,Sun,Home,D,0,0,Cádiz,2.0,0.2,82.0,38818.0,Karim Benzema,4-3-3,4-2-3-1,Santiago Jaime,Match Report,,36.0,9.0,19.0,2.0,0,0,2022,Real Madrid
+2021-12-22,21:30,La Liga,Matchweek 21,Wed,Away,W,2,1,Athletic Club,1.1,1.0,59.0,42722.0,Karim Benzema,4-3-3,4-4-2,César Soto,Match Report,,12.0,7.0,22.4,0.0,0,0,2022,Real Madrid
+2022-01-02,14:00,La Liga,Matchweek 19,Sun,Away,L,0,1,Getafe,0.7,0.9,73.0,11890.0,Karim Benzema,4-3-3,5-3-2,Mario Melero,Match Report,,14.0,4.0,21.8,1.0,0,0,2022,Real Madrid
+2022-01-08,21:00,La Liga,Matchweek 20,Sat,Home,W,4,1,Valencia,3.9,1.3,67.0,40617.0,Karim Benzema,4-3-3,4-4-2,Alejandro Hernández,Match Report,,22.0,7.0,19.5,1.0,1,1,2022,Real Madrid
+2022-01-23,16:15,La Liga,Matchweek 22,Sun,Home,D,2,2,Elche,3.4,0.6,65.0,39796.0,Karim Benzema,4-3-3,4-4-2,Ricardo de Burgos,Match Report,,21.0,7.0,17.7,1.0,1,2,2022,Real Madrid
+2022-02-06,21:00,La Liga,Matchweek 23,Sun,Home,W,1,0,Granada,2.1,0.6,66.0,36665.0,Marcelo,4-3-3,4-4-2,Antonio Matéu Lahoz,Match Report,,24.0,11.0,18.3,1.0,0,0,2022,Real Madrid
+2022-02-12,16:15,La Liga,Matchweek 24,Sat,Away,D,0,0,Villarreal,1.7,0.4,56.0,17894.0,Marcelo,4-3-3,4-4-2,José Sánchez,Match Report,,17.0,5.0,17.8,0.0,0,0,2022,Real Madrid
+2022-02-19,21:00,La Liga,Matchweek 25,Sat,Home,W,3,0,Alavés,2.9,0.6,69.0,42180.0,Karim Benzema,4-3-3,4-1-4-1,José Luis Munuera,Match Report,,22.0,7.0,18.8,2.0,1,1,2022,Real Madrid
+2022-02-26,18:30,La Liga,Matchweek 26,Sat,Away,W,1,0,Rayo Vallecano,2.1,0.9,66.0,9952.0,Karim Benzema,4-3-3,4-2-3-1,Isidro Díaz de Mera,Match Report,,13.0,6.0,15.2,0.0,0,0,2022,Real Madrid
+2022-03-05,21:00,La Liga,Matchweek 27,Sat,Home,W,4,1,Real Sociedad,2.0,0.8,64.0,52410.0,Karim Benzema,4-3-3,4-4-2,Jesús Gil,Match Report,,17.0,7.0,22.1,2.0,1,1,2022,Real Madrid
+2022-03-14,21:00,La Liga,Matchweek 28,Mon,Away,W,3,0,Mallorca,1.8,1.4,62.0,17191.0,Karim Benzema,4-3-3,4-4-2,José Sánchez,Match Report,,10.0,4.0,19.5,0.0,1,1,2022,Real Madrid
+2022-03-20,21:00,La Liga,Matchweek 29,Sun,Home,L,0,4,Barcelona,0.8,3.4,40.0,60017.0,Nacho,4-2-4-0,4-3-3,Juan Martínez,Match Report,,14.0,4.0,20.1,0.0,0,0,2022,Real Madrid
+2022-04-02,18:30,La Liga,Matchweek 30,Sat,Away,W,2,1,Celta Vigo,2.9,1.6,45.0,15714.0,Karim Benzema,4-3-3,4-1-3-2,Pablo González,Match Report,,9.0,3.0,24.9,0.0,2,3,2022,Real Madrid
+2022-04-09,21:00,La Liga,Matchweek 31,Sat,Home,W,2,0,Getafe,1.6,0.4,68.0,50740.0,Marcelo,4-3-3,5-3-2,César Soto,Match Report,,26.0,8.0,20.5,0.0,0,0,2022,Real Madrid
+2022-04-17,21:00,La Liga,Matchweek 32,Sun,Away,W,3,2,Sevilla,1.2,0.9,60.0,40629.0,Karim Benzema,4-3-3,4-2-3-1,Guillermo Cuadra,Match Report,,15.0,6.0,22.3,0.0,0,0,2022,Real Madrid
+2022-04-20,21:30,La Liga,Matchweek 33,Wed,Away,W,3,1,Osasuna,4.5,1.1,65.0,21360.0,Karim Benzema,4-3-3,4-5-1,Ricardo de Burgos,Match Report,,21.0,9.0,19.2,0.0,0,2,2022,Real Madrid
+2022-04-30,16:15,La Liga,Matchweek 34,Sat,Home,W,4,0,Espanyol,1.8,1.3,58.0,58686.0,Marcelo,4-3-3,4-4-2,José Luis Munuera,Match Report,,11.0,5.0,15.4,0.0,0,0,2022,Real Madrid
+2022-05-08,21:00,La Liga,Matchweek 35,Sun,Away,L,0,1,Atlético Madrid,1.1,2.3,58.0,63874.0,Nacho,4-3-3,4-4-2,César Soto,Match Report,,15.0,6.0,23.0,1.0,0,0,2022,Real Madrid
+2022-05-12,21:30,La Liga,Matchweek 36,Thu,Home,W,6,0,Levante,3.5,1.0,54.0,38421.0,Karim Benzema,4-3-3,5-3-2,Adrián Cordero,Match Report,,27.0,16.0,16.4,1.0,0,0,2022,Real Madrid
+2022-05-15,19:30,La Liga,Matchweek 37,Sun,Away,D,1,1,Cádiz,1.6,2.7,61.0,19643.0,Nacho,4-3-3,4-4-2,Antonio Matéu Lahoz,Match Report,,16.0,7.0,18.6,1.0,0,0,2022,Real Madrid
+2022-05-20,21:00,La Liga,Matchweek 38,Fri,Home,D,0,0,Betis,1.2,0.9,52.0,52232.0,Karim Benzema,4-3-3,4-2-3-1,Santiago Jaime,Match Report,,17.0,3.0,21.4,0.0,0,0,2022,Real Madrid
+2020-09-20,21:00,La Liga,Matchweek 2,Sun,Away,D,0,0,Real Sociedad,0.9,0.6,68.0,,Sergio Ramos,4-2-3-1,4-4-2,Juan Martínez,Match Report,,16.0,4.0,20.1,0.0,0,0,2021,Real Madrid
+2020-09-26,21:00,La Liga,Matchweek 3,Sat,Away,W,3,2,Betis,3.8,1.2,55.0,,Sergio Ramos,4-3-1-2,4-2-3-1,Ricardo de Burgos,Match Report,,10.0,3.0,12.0,1.0,1,1,2021,Real Madrid
+2020-09-30,21:30,La Liga,Matchweek 4,Wed,Home,W,1,0,Valladolid,2.3,0.6,62.0,,Sergio Ramos,4-3-1-2,4-2-3-1,César Soto,Match Report,,15.0,5.0,14.8,0.0,0,0,2021,Real Madrid
+2020-10-04,16:00,La Liga,Matchweek 5,Sun,Away,W,2,0,Levante,2.2,0.5,55.0,,Sergio Ramos,4-3-3,4-4-2,José Luis Munuera,Match Report,,13.0,3.0,15.7,0.0,0,0,2021,Real Madrid
+2020-10-17,18:30,La Liga,Matchweek 6,Sat,Home,L,0,1,Cádiz,1.0,1.6,75.0,,Sergio Ramos,4-3-3,4-4-2,Santiago Jaime,Match Report,,14.0,2.0,19.5,0.0,0,0,2021,Real Madrid
+2020-10-24,16:00,La Liga,Matchweek 7,Sat,Away,W,3,1,Barcelona,3.0,1.8,47.0,,Sergio Ramos,4-3-3,4-4-2,Juan Martínez,Match Report,,14.0,8.0,15.5,0.0,1,1,2021,Real Madrid
+2020-10-31,14:00,La Liga,Matchweek 8,Sat,Home,W,4,1,Huesca,2.3,1.0,60.0,,Sergio Ramos,4-3-3,4-4-2,Pablo González,Match Report,,13.0,6.0,16.9,0.0,0,0,2021,Real Madrid
+2020-11-08,21:00,La Liga,Matchweek 9,Sun,Away,L,1,4,Valencia,1.3,2.5,65.0,,Sergio Ramos,4-2-3-1,4-4-2,Jesús Gil,Match Report,,16.0,6.0,16.6,0.0,0,0,2021,Real Madrid
+2020-11-21,16:15,La Liga,Matchweek 10,Sat,Away,D,1,1,Villarreal,0.6,1.7,53.0,,Raphaël Varane,4-2-3-1,4-4-2,Alejandro Hernández,Match Report,,6.0,1.0,20.3,0.0,0,0,2021,Real Madrid
+2020-11-28,21:00,La Liga,Matchweek 11,Sat,Home,L,1,2,Alavés,1.7,2.2,67.0,,Marcelo,4-3-3,4-4-2,Adrián Cordero,Match Report,,20.0,8.0,17.0,0.0,0,0,2021,Real Madrid
+2020-12-05,16:15,La Liga,Matchweek 12,Sat,Away,W,1,0,Sevilla,1.5,0.7,37.0,,Karim Benzema,4-3-3,4-3-3,José Sánchez,Match Report,,10.0,2.0,15.7,0.0,0,0,2021,Real Madrid
+2020-12-12,21:00,La Liga,Matchweek 13,Sat,Home,W,2,0,Atlético Madrid,0.9,0.7,56.0,,Sergio Ramos,4-3-3,3-5-2,Antonio Matéu Lahoz,Match Report,,11.0,3.0,20.2,1.0,0,0,2021,Real Madrid
+2020-12-15,22:00,La Liga,Matchweek 19,Tue,Home,W,3,1,Athletic Club,2.2,0.8,68.0,,Sergio Ramos,4-2-3-1,4-2-3-1,Jesús Gil,Match Report,,18.0,5.0,17.0,0.0,0,0,2021,Real Madrid
+2020-12-20,21:00,La Liga,Matchweek 14,Sun,Away,W,3,1,Eibar,2.2,0.7,66.0,,Sergio Ramos,4-3-3,4-4-2,José Luis Munuera,Match Report,,11.0,4.0,17.6,2.0,0,0,2021,Real Madrid
+2020-12-23,19:45,La Liga,Matchweek 15,Wed,Home,W,2,0,Granada,1.8,0.8,66.0,,Sergio Ramos,4-3-3,4-1-4-1,Juan Martínez,Match Report,,23.0,6.0,17.9,0.0,0,0,2021,Real Madrid
+2020-12-30,21:30,La Liga,Matchweek 16,Wed,Away,D,1,1,Elche,1.4,1.0,67.0,,Sergio Ramos,4-3-3,4-1-4-1,Jorge Figueroa,Match Report,,14.0,6.0,17.3,0.0,0,0,2021,Real Madrid
+2021-01-02,21:00,La Liga,Matchweek 17,Sat,Home,W,2,0,Celta Vigo,1.0,0.7,41.0,,Karim Benzema,4-3-3,4-1-3-2,Ricardo de Burgos,Match Report,,9.0,2.0,18.8,0.0,0,0,2021,Real Madrid
+2021-01-09,21:00,La Liga,Matchweek 18,Sat,Away,D,0,0,Osasuna,0.4,0.6,69.0,,Sergio Ramos,4-3-3,4-1-4-1,César Soto,Match Report,,9.0,1.0,16.4,0.0,0,0,2021,Real Madrid
+2021-01-23,21:00,La Liga,Matchweek 20,Sat,Away,W,4,1,Alavés,1.4,0.7,60.0,,Karim Benzema,4-3-3,4-4-2,Alejandro Hernández,Match Report,,10.0,6.0,15.7,0.0,0,0,2021,Real Madrid
+2021-01-30,16:15,La Liga,Matchweek 21,Sat,Home,L,1,2,Levante,1.3,1.8,47.0,,Karim Benzema,4-3-3,4-4-2,David Medié,Match Report,,8.0,2.0,20.9,0.0,0,0,2021,Real Madrid
+2021-02-06,16:15,La Liga,Matchweek 22,Sat,Away,W,2,1,Huesca,3.4,1.0,65.0,,Karim Benzema,4-3-3,3-5-2,Javier Estrada,Match Report,,18.0,7.0,13.0,2.0,0,0,2021,Real Madrid
+2021-02-09,21:00,La Liga,Matchweek 1,Tue,Home,W,2,0,Getafe,1.6,0.1,67.0,,Marcelo,3-4-3,4-4-2,Alberola Rojas,Match Report,,14.0,4.0,15.3,1.0,0,0,2021,Real Madrid
+2021-02-14,16:15,La Liga,Matchweek 23,Sun,Home,W,2,0,Valencia,0.8,0.1,61.0,,Karim Benzema,4-3-3,4-4-2,José Sánchez,Match Report,,16.0,7.0,21.8,0.0,0,0,2021,Real Madrid
+2021-02-20,21:00,La Liga,Matchweek 24,Sat,Away,W,1,0,Valladolid,0.8,1.0,64.0,,Raphaël Varane,4-3-3,4-2-3-1,Guillermo Cuadra,Match Report,,10.0,2.0,18.6,0.0,0,0,2021,Real Madrid
+2021-03-01,21:00,La Liga,Matchweek 25,Mon,Home,D,1,1,Real Sociedad,2.2,0.8,59.0,,Raphaël Varane,4-3-3,4-2-3-1,Jesús Gil,Match Report,,20.0,2.0,16.7,0.0,0,0,2021,Real Madrid
+2021-03-07,16:15,La Liga,Matchweek 26,Sun,Away,D,1,1,Atlético Madrid,1.6,1.4,61.0,,Karim Benzema,4-3-3,4-1-4-1,Alejandro Hernández,Match Report,,18.0,8.0,19.9,2.0,0,0,2021,Real Madrid
+2021-03-13,16:15,La Liga,Matchweek 27,Sat,Home,W,2,1,Elche,1.6,0.5,65.0,,Sergio Ramos,3-1-4-2,4-4-2,Jorge Figueroa,Match Report,,17.0,4.0,17.0,0.0,0,0,2021,Real Madrid
+2021-03-20,16:15,La Liga,Matchweek 28,Sat,Away,W,3,1,Celta Vigo,2.5,0.6,49.0,,Karim Benzema,4-1-2-1-2◆,4-1-3-2,Mario Melero,Match Report,,16.0,4.0,16.0,1.0,0,0,2021,Real Madrid
+2021-04-03,16:15,La Liga,Matchweek 29,Sat,Home,W,2,0,Eibar,1.8,0.4,63.0,,Marcelo,3-4-3,4-1-4-1,Isidro Díaz de Mera,Match Report,,21.0,8.0,19.0,1.0,0,0,2021,Real Madrid
+2021-04-10,21:00,La Liga,Matchweek 30,Sat,Home,W,2,1,Barcelona,1.5,1.3,31.0,,Karim Benzema,4-1-4-1,3-4-3,Jesús Gil,Match Report,,14.0,3.0,18.0,2.0,0,0,2021,Real Madrid
+2021-04-18,21:00,La Liga,Matchweek 33,Sun,Away,D,0,0,Getafe,0.5,1.8,58.0,,Marcelo,4-2-3-1,4-4-2,José Sánchez,Match Report,,10.0,1.0,18.9,0.0,0,0,2021,Real Madrid
+2021-04-21,22:00,La Liga,Matchweek 31,Wed,Away,W,3,0,Cádiz,3.2,1.0,61.0,,Marcelo,3-4-3,4-4-2,Antonio Matéu Lahoz,Match Report,,13.0,3.0,17.2,2.0,1,1,2021,Real Madrid
+2021-04-24,21:00,La Liga,Matchweek 32,Sat,Home,D,0,0,Betis,1.0,0.9,57.0,,Karim Benzema,4-3-3,4-2-3-1,Javier Estrada,Match Report,,17.0,5.0,17.5,1.0,0,0,2021,Real Madrid
+2021-05-01,21:00,La Liga,Matchweek 34,Sat,Home,W,2,0,Osasuna,1.7,0.1,65.0,,Marcelo,4-2-3-1,4-1-4-1,Guillermo Cuadra,Match Report,,22.0,6.0,20.3,0.0,0,0,2021,Real Madrid
+2021-05-09,21:00,La Liga,Matchweek 35,Sun,Home,D,2,2,Sevilla,0.9,1.2,58.0,,Marcelo,4-3-3,4-3-3,Juan Martínez,Match Report,,17.0,7.0,22.2,0.0,0,0,2021,Real Madrid
+2021-05-13,22:00,La Liga,Matchweek 36,Thu,Away,W,4,1,Granada,1.3,1.9,64.0,,Karim Benzema,4-3-3,4-2-3-1,Jesús Gil,Match Report,,16.0,7.0,14.2,0.0,0,0,2021,Real Madrid
+2021-05-16,18:30,La Liga,Matchweek 37,Sun,Away,W,1,0,Athletic Club,1.0,0.7,64.0,,Karim Benzema,4-3-3,4-4-2,Antonio Matéu Lahoz,Match Report,,11.0,2.0,25.4,1.0,0,0,2021,Real Madrid
+2021-05-22,18:00,La Liga,Matchweek 38,Sat,Home,W,2,1,Villarreal,1.2,0.6,56.0,,Karim Benzema,4-3-3,4-4-2,José Luis Munuera,Match Report,,14.0,4.0,17.6,0.0,0,0,2021,Real Madrid
+2019-08-17,17:00,La Liga,Matchweek 1,Sat,Away,W,3,1,Celta Vigo,2.1,1.6,44.0,23566.0,Sergio Ramos,4-3-3,4-2-2-2,Javier Estrada,Match Report,,17.0,11.0,17.3,1.0,0,0,2020,Real Madrid
+2019-08-24,19:00,La Liga,Matchweek 2,Sat,Home,D,1,1,Valladolid,1.7,1.2,66.0,63037.0,Sergio Ramos,4-1-4-1,4-4-2,Pablo González,Match Report,,22.0,4.0,17.0,1.0,0,0,2020,Real Madrid
+2019-09-01,21:00,La Liga,Matchweek 3,Sun,Away,D,2,2,Villarreal,1.9,1.4,56.0,20128.0,Sergio Ramos,4-4-2,4-4-2,Jesús Gil,Match Report,,17.0,5.0,17.1,1.0,0,0,2020,Real Madrid
+2019-09-14,13:00,La Liga,Matchweek 4,Sat,Home,W,3,2,Levante,2.9,1.2,65.0,60401.0,Sergio Ramos,4-1-4-1,5-3-2,Ricardo de Burgos,Match Report,,25.0,11.0,16.0,0.0,0,0,2020,Real Madrid
+2019-09-22,21:00,La Liga,Matchweek 5,Sun,Away,W,1,0,Sevilla,1.2,0.5,45.0,42354.0,Sergio Ramos,4-2-3-1,4-3-3,Juan Martínez,Match Report,,7.0,4.0,15.1,1.0,0,0,2020,Real Madrid
+2019-09-25,21:00,La Liga,Matchweek 6,Wed,Home,W,2,0,Osasuna,1.6,0.2,55.0,57520.0,Sergio Ramos,4-1-4-1,4-4-2,Antonio Matéu Lahoz,Match Report,,15.0,4.0,19.6,0.0,0,0,2020,Real Madrid
+2019-09-28,21:00,La Liga,Matchweek 7,Sat,Away,D,0,0,Atlético Madrid,0.4,0.9,55.0,68032.0,Sergio Ramos,4-1-4-1,4-4-2,José González,Match Report,,14.0,3.0,26.1,1.0,0,0,2020,Real Madrid
+2019-10-05,16:00,La Liga,Matchweek 8,Sat,Home,W,4,2,Granada,2.6,1.6,61.0,70315.0,Sergio Ramos,4-3-3,4-1-4-1,Santiago Jaime,Match Report,,17.0,10.0,18.3,1.0,0,0,2020,Real Madrid
+2019-10-19,21:00,La Liga,Matchweek 9,Sat,Away,L,0,1,Mallorca,1.0,0.2,63.0,20275.0,Sergio Ramos,4-4-2,4-3-3,Alberola Rojas,Match Report,,14.0,4.0,18.2,1.0,0,0,2020,Real Madrid
+2019-10-30,21:15,La Liga,Matchweek 11,Wed,Home,W,5,0,Leganés,4.8,0.3,61.0,53870.0,Sergio Ramos,4-3-3,4-2-3-1,César Soto,Match Report,,20.0,9.0,18.4,1.0,2,2,2020,Real Madrid
+2019-11-02,21:00,La Liga,Matchweek 12,Sat,Home,D,0,0,Betis,2.8,0.5,63.0,70375.0,Sergio Ramos,4-3-3,5-3-2,José Sánchez,Match Report,,22.0,7.0,17.3,2.0,0,0,2020,Real Madrid
+2019-11-09,18:30,La Liga,Matchweek 13,Sat,Away,W,4,0,Eibar,2.9,1.0,58.0,7045.0,Sergio Ramos,4-3-3,4-4-2,Adrián Cordero,Match Report,,8.0,3.0,18.3,0.0,2,2,2020,Real Madrid
+2019-11-23,21:00,La Liga,Matchweek 14,Sat,Home,W,3,1,Real Sociedad,1.4,1.6,54.0,69305.0,Sergio Ramos,4-3-3,4-2-3-1,Jesús Gil,Match Report,,18.0,10.0,16.8,0.0,0,0,2020,Real Madrid
+2019-11-30,13:00,La Liga,Matchweek 15,Sat,Away,W,2,1,Alavés,1.8,1.3,64.0,19357.0,Sergio Ramos,4-3-3,4-4-2,Guillermo Cuadra,Match Report,,12.0,6.0,15.8,0.0,0,0,2020,Real Madrid
+2019-12-07,13:00,La Liga,Matchweek 16,Sat,Home,W,2,0,Espanyol,2.4,0.5,60.0,64125.0,Sergio Ramos,4-3-3,3-1-4-2,Santiago Jaime,Match Report,,18.0,8.0,17.2,1.0,0,0,2020,Real Madrid
+2019-12-15,21:00,La Liga,Matchweek 17,Sun,Away,D,1,1,Valencia,1.7,2.3,64.0,44230.0,Sergio Ramos,4-3-3,4-4-2,José Sánchez,Match Report,,19.0,6.0,17.3,1.0,0,0,2020,Real Madrid
+2019-12-18,20:00,La Liga,Matchweek 10,Wed,Away,D,0,0,Barcelona,0.8,0.9,48.0,93426.0,Sergio Ramos,4-1-2-1-2◆,4-3-3,Alejandro Hernández,Match Report,,17.0,3.0,19.8,0.0,0,0,2020,Real Madrid
+2019-12-22,21:00,La Liga,Matchweek 18,Sun,Home,D,0,0,Athletic Club,2.5,0.4,69.0,71306.0,Sergio Ramos,4-3-3,5-3-2,Adrián Cordero,Match Report,,20.0,8.0,15.0,0.0,0,0,2020,Real Madrid
+2020-01-04,16:00,La Liga,Matchweek 19,Sat,Away,W,3,0,Getafe,1.8,1.3,55.0,15426.0,Karim Benzema,4-3-3,4-4-2,José Luis Munuera,Match Report,,9.0,7.0,14.3,0.0,0,0,2020,Real Madrid
+2020-01-18,16:00,La Liga,Matchweek 20,Sat,Home,W,2,1,Sevilla,1.3,0.4,52.0,72512.0,Marcelo,4-3-3,4-3-3,Juan Martínez,Match Report,,13.0,4.0,21.0,0.0,0,0,2020,Real Madrid
+2020-01-26,21:00,La Liga,Matchweek 21,Sun,Away,W,1,0,Valladolid,0.6,0.3,61.0,23404.0,Sergio Ramos,4-3-3,4-3-1-2,Ricardo de Burgos,Match Report,,12.0,3.0,22.1,1.0,0,0,2020,Real Madrid
+2020-02-01,16:00,La Liga,Matchweek 22,Sat,Home,W,1,0,Atlético Madrid,1.1,0.4,64.0,77223.0,Sergio Ramos,4-2-3-1,4-4-2,Javier Estrada,Match Report,,16.0,5.0,21.2,0.0,0,0,2020,Real Madrid
+2020-02-09,16:00,La Liga,Matchweek 23,Sun,Away,W,4,1,Osasuna,2.6,0.9,55.0,17000.0,Sergio Ramos,4-3-3,4-4-2,Jesús Gil,Match Report,,17.0,6.0,14.4,0.0,0,0,2020,Real Madrid
+2020-02-16,21:00,La Liga,Matchweek 24,Sun,Home,D,2,2,Celta Vigo,2.0,1.0,66.0,62477.0,Sergio Ramos,4-3-3,3-5-2,Alberola Rojas,Match Report,,14.0,3.0,18.7,0.0,1,1,2020,Real Madrid
+2020-02-22,21:00,La Liga,Matchweek 25,Sat,Away,L,0,1,Levante,1.9,0.7,63.0,23566.0,Sergio Ramos,4-3-3,4-4-2,Alejandro Hernández,Match Report,,19.0,7.0,18.0,0.0,0,0,2020,Real Madrid
+2020-03-01,21:00,La Liga,Matchweek 26,Sun,Home,W,2,0,Barcelona,1.1,1.5,44.0,78357.0,Sergio Ramos,4-1-4-1,4-4-2,Antonio Matéu Lahoz,Match Report,,13.0,4.0,17.7,1.0,0,0,2020,Real Madrid
+2020-03-08,21:00,La Liga,Matchweek 27,Sun,Away,L,1,2,Betis,2.1,1.3,57.0,51521.0,Sergio Ramos,4-1-4-1,4-4-1-1,José González,Match Report,,13.0,3.0,15.7,0.0,1,1,2020,Real Madrid
+2020-06-14,19:30,La Liga,Matchweek 28,Sun,Home,W,3,1,Eibar,1.0,0.5,55.0,,Sergio Ramos,4-3-3,4-1-4-1,Guillermo Cuadra,Match Report,,6.0,5.0,13.2,0.0,0,0,2020,Real Madrid
+2020-06-18,22:00,La Liga,Matchweek 29,Thu,Home,W,3,0,Valencia,1.9,0.2,63.0,,Sergio Ramos,4-3-3,4-4-2,José Sánchez,Match Report,,19.0,14.0,19.8,1.0,0,0,2020,Real Madrid
+2020-06-21,22:00,La Liga,Matchweek 30,Sun,Away,W,2,1,Real Sociedad,1.3,0.4,49.0,,Sergio Ramos,4-3-3,4-2-3-1,Javier Estrada,Match Report,,9.0,5.0,22.4,0.0,1,1,2020,Real Madrid
+2020-06-24,22:00,La Liga,Matchweek 31,Wed,Home,W,2,0,Mallorca,1.3,0.6,55.0,,Sergio Ramos,4-2-3-1,3-5-2,Mario Melero,Match Report,,14.0,6.0,18.6,1.0,0,0,2020,Real Madrid
+2020-06-28,22:00,La Liga,Matchweek 32,Sun,Away,W,1,0,Espanyol,2.1,0.8,68.0,,Sergio Ramos,4-3-3,4-4-1-1,Antonio Matéu Lahoz,Match Report,,14.0,6.0,16.7,1.0,0,0,2020,Real Madrid
+2020-07-02,22:00,La Liga,Matchweek 33,Thu,Home,W,1,0,Getafe,1.8,0.5,67.0,,Sergio Ramos,4-3-3,4-4-1-1,Juan Martínez,Match Report,,7.0,3.0,18.6,0.0,1,1,2020,Real Madrid
+2020-07-05,14:00,La Liga,Matchweek 34,Sun,Away,W,1,0,Athletic Club,2.5,0.3,56.0,,Sergio Ramos,4-3-3,4-2-3-1,José González,Match Report,,9.0,3.0,15.8,1.0,1,1,2020,Real Madrid
+2020-07-10,22:00,La Liga,Matchweek 35,Fri,Home,W,2,0,Alavés,2.2,1.2,70.0,,Karim Benzema,4-3-3,4-4-2,Jesús Gil,Match Report,,17.0,7.0,19.6,0.0,1,1,2020,Real Madrid
+2020-07-13,22:00,La Liga,Matchweek 36,Mon,Away,W,2,1,Granada,0.4,0.9,62.0,,Sergio Ramos,4-3-2-1,3-4-3,Santiago Jaime,Match Report,,11.0,5.0,19.4,0.0,0,0,2020,Real Madrid
+2020-07-16,21:00,La Liga,Matchweek 37,Thu,Home,W,2,1,Villarreal,1.6,1.1,57.0,,Sergio Ramos,4-3-3,4-2-3-1,Alejandro Hernández,Match Report,,11.0,6.0,19.1,0.0,1,1,2020,Real Madrid
+2020-07-19,21:00,La Liga,Matchweek 38,Sun,Away,D,2,2,Leganés,0.8,1.4,64.0,,Sergio Ramos,4-3-3,5-4-1,Guillermo Cuadra,Match Report,,7.0,4.0,15.3,0.0,0,0,2020,Real Madrid
+2018-08-19,22:15,La Liga,Matchweek 1,Sun,Home,W,2,0,Getafe,1.0,0.2,77.0,48446.0,Sergio Ramos,4-3-3,4-1-4-1,Javier Estrada,Match Report,,10.0,3.0,18.0,0.0,0,0,2019,Real Madrid
+2018-08-26,22:15,La Liga,Matchweek 2,Sun,Away,W,4,1,Girona,3.9,0.4,66.0,13889.0,Sergio Ramos,4-2-3-1,4-3-3,Juan Martínez,Match Report,,18.0,6.0,18.5,1.0,2,2,2019,Real Madrid
+2018-09-01,20:45,La Liga,Matchweek 3,Sat,Home,W,4,1,Leganés,2.5,1.1,77.0,59255.0,Sergio Ramos,4-3-3,4-4-2,Santiago Jaime,Match Report,,16.0,7.0,17.0,0.0,1,1,2019,Real Madrid
+2018-09-15,20:45,La Liga,Matchweek 4,Sat,Away,D,1,1,Athletic Club,1.8,1.4,61.0,46413.0,Sergio Ramos,4-3-3,4-2-3-1,José González,Match Report,,16.0,6.0,18.3,2.0,0,0,2019,Real Madrid
+2018-09-22,20:45,La Liga,Matchweek 5,Sat,Home,W,1,0,Espanyol,1.0,0.4,64.0,67658.0,Sergio Ramos,4-3-3,4-1-4-1,Antonio Matéu Lahoz,Match Report,,19.0,5.0,19.9,0.0,0,0,2019,Real Madrid
+2018-09-26,22:00,La Liga,Matchweek 6,Wed,Away,L,0,3,Sevilla,1.5,2.4,60.0,40972.0,Sergio Ramos,4-3-3,3-5-2,Alejandro Hernández,Match Report,,21.0,3.0,20.3,2.0,0,0,2019,Real Madrid
+2018-09-29,20:45,La Liga,Matchweek 7,Sat,Home,D,0,0,Atlético Madrid,1.2,0.8,65.0,78642.0,Sergio Ramos,4-3-3,4-4-2,Juan Martínez,Match Report,,15.0,6.0,19.0,1.0,0,0,2019,Real Madrid
+2018-10-06,18:30,La Liga,Matchweek 8,Sat,Away,L,0,1,Alavés,0.8,1.1,69.0,19461.0,Sergio Ramos,4-3-3,4-3-3,Santiago Jaime,Match Report,,13.0,5.0,18.5,2.0,0,0,2019,Real Madrid
+2018-10-20,13:00,La Liga,Matchweek 9,Sat,Home,L,1,2,Levante,2.9,2.0,70.0,63423.0,Sergio Ramos,4-3-3,3-1-4-2,Guillermo Cuadra,Match Report,,33.0,12.0,14.2,1.0,0,0,2019,Real Madrid
+2018-10-28,16:15,La Liga,Matchweek 10,Sun,Away,L,1,5,Barcelona,2.1,3.0,47.0,93265.0,Sergio Ramos,4-3-3,4-3-3,José Sánchez,Match Report,,15.0,4.0,17.9,0.0,0,0,2019,Real Madrid
+2018-11-03,16:15,La Liga,Matchweek 11,Sat,Home,W,2,0,Valladolid,2.2,0.9,58.0,68050.0,Sergio Ramos,4-3-3,4-4-2,Jesús Gil,Match Report,,16.0,6.0,16.4,0.0,1,1,2019,Real Madrid
+2018-11-11,20:45,La Liga,Matchweek 12,Sun,Away,W,4,2,Celta Vigo,2.5,0.9,48.0,21184.0,Sergio Ramos,4-3-3,4-4-2,Alberto Undiano,Match Report,,13.0,4.0,18.1,0.0,1,1,2019,Real Madrid
+2018-11-24,13:00,La Liga,Matchweek 13,Sat,Away,L,0,3,Eibar,1.1,2.8,60.0,6435.0,Sergio Ramos,4-3-3,4-4-2,Juan Martínez,Match Report,,9.0,2.0,19.0,1.0,0,0,2019,Real Madrid
+2018-12-01,20:45,La Liga,Matchweek 14,Sat,Home,W,2,0,Valencia,0.8,0.8,60.0,69653.0,Sergio Ramos,4-3-3,4-4-2,José González,Match Report,,13.0,3.0,17.1,0.0,0,0,2019,Real Madrid
+2018-12-09,16:15,La Liga,Matchweek 15,Sun,Away,W,1,0,Huesca,0.4,1.2,55.0,7341.0,Sergio Ramos,4-1-4-1,4-2-3-1,Mario Melero,Match Report,,5.0,4.0,20.2,0.0,0,0,2019,Real Madrid
+2018-12-15,18:30,La Liga,Matchweek 16,Sat,Home,W,1,0,Rayo Vallecano,1.2,0.7,69.0,55229.0,Sergio Ramos,4-3-3,4-1-4-1,Ricardo de Burgos,Match Report,,9.0,4.0,17.0,0.0,0,0,2019,Real Madrid
+2019-01-03,21:30,La Liga,Matchweek 17,Thu,Away,D,2,2,Villarreal,1.6,1.2,54.0,19903.0,Sergio Ramos,4-3-3,4-2-3-1,Pablo González,Match Report,,14.0,7.0,18.6,0.0,0,0,2019,Real Madrid
+2019-01-06,18:30,La Liga,Matchweek 18,Sun,Home,L,0,2,Real Sociedad,2.6,2.3,59.0,53412.0,Sergio Ramos,4-3-3,4-2-3-1,José Luis Munuera,Match Report,,28.0,8.0,16.2,0.0,0,0,2019,Real Madrid
+2019-01-13,20:45,La Liga,Matchweek 19,Sun,Away,W,2,1,Betis,0.7,0.8,28.0,54187.0,Sergio Ramos,3-4-3,4-3-3,Alejandro Hernández,Match Report,,14.0,5.0,19.8,2.0,0,0,2019,Real Madrid
+2019-01-19,16:15,La Liga,Matchweek 20,Sat,Home,W,2,0,Sevilla,1.5,0.5,69.0,68232.0,Sergio Ramos,4-3-3,5-3-2,Antonio Matéu Lahoz,Match Report,,23.0,6.0,20.5,1.0,0,0,2019,Real Madrid
+2019-01-27,20:45,La Liga,Matchweek 21,Sun,Away,W,4,2,Espanyol,2.1,1.1,63.0,21215.0,Sergio Ramos,4-3-3,4-3-3,Jesús Gil,Match Report,,16.0,9.0,16.0,0.0,0,0,2019,Real Madrid
+2019-02-03,20:45,La Liga,Matchweek 22,Sun,Home,W,3,0,Alavés,2.5,0.6,70.0,53132.0,Sergio Ramos,4-3-3,4-5-1,Santiago Jaime,Match Report,,22.0,8.0,17.7,1.0,0,0,2019,Real Madrid
+2019-02-09,16:15,La Liga,Matchweek 23,Sat,Away,W,3,1,Atlético Madrid,1.6,1.1,65.0,67752.0,Sergio Ramos,4-3-3,4-4-2,Javier Estrada,Match Report,,10.0,3.0,16.9,0.0,1,1,2019,Real Madrid
+2019-02-17,12:00,La Liga,Matchweek 24,Sun,Home,L,1,2,Girona,1.8,2.6,57.0,68099.0,Sergio Ramos,4-3-3,4-1-4-1,Guillermo Cuadra,Match Report,,19.0,7.0,15.9,1.0,0,0,2019,Real Madrid
+2019-02-24,20:45,La Liga,Matchweek 25,Sun,Away,W,2,1,Levante,2.7,1.2,60.0,23018.0,Karim Benzema,4-3-3,3-5-2,Ignacio Iglesias,Match Report,,17.0,3.0,19.3,0.0,2,2,2019,Real Madrid
+2019-03-02,20:45,La Liga,Matchweek 26,Sat,Home,L,0,1,Barcelona,0.9,1.1,49.0,78921.0,Sergio Ramos,4-3-3,4-3-3,Alberto Undiano,Match Report,,17.0,3.0,18.8,1.0,0,0,2019,Real Madrid
+2019-03-10,20:45,La Liga,Matchweek 27,Sun,Away,W,4,1,Valladolid,2.8,2.2,61.0,21914.0,Karim Benzema,4-3-3,4-4-1-1,Jesús Gil,Match Report,,14.0,5.0,16.6,0.0,1,1,2019,Real Madrid
+2019-03-16,16:15,La Liga,Matchweek 28,Sat,Home,W,2,0,Celta Vigo,2.5,0.4,54.0,65054.0,Sergio Ramos,4-2-3-1,4-2-3-1,Juan Martínez,Match Report,,22.0,7.0,18.1,0.0,0,0,2019,Real Madrid
+2019-03-31,20:45,La Liga,Matchweek 29,Sun,Home,W,3,2,Huesca,4.1,1.7,70.0,49269.0,Sergio Ramos,4-3-3,5-3-2,Javier Estrada,Match Report,,16.0,8.0,15.1,1.0,0,0,2019,Real Madrid
+2019-04-03,21:30,La Liga,Matchweek 30,Wed,Away,L,1,2,Valencia,0.8,1.8,67.0,44274.0,Sergio Ramos,4-3-3,4-4-2,Santiago Jaime,Match Report,,15.0,5.0,20.0,0.0,0,0,2019,Real Madrid
+2019-04-06,16:15,La Liga,Matchweek 31,Sat,Home,W,2,1,Eibar,1.6,0.8,56.0,50284.0,Karim Benzema,4-3-3,4-1-4-1,Pablo González,Match Report,,13.0,7.0,16.6,0.0,0,0,2019,Real Madrid
+2019-04-15,21:00,La Liga,Matchweek 32,Mon,Away,D,1,1,Leganés,1.2,0.6,69.0,12118.0,Marcelo,4-3-3,5-3-2,David Medié,Match Report,,13.0,6.0,18.4,1.0,0,0,2019,Real Madrid
+2019-04-21,16:15,La Liga,Matchweek 33,Sun,Home,W,3,0,Athletic Club,1.9,0.5,57.0,59815.0,Marcelo,4-3-3,4-2-3-1,Mario Melero,Match Report,,11.0,4.0,13.7,0.0,0,0,2019,Real Madrid
+2019-04-25,21:30,La Liga,Matchweek 34,Thu,Away,D,0,0,Getafe,1.8,0.6,66.0,13135.0,Karim Benzema,4-3-3,4-4-2,Ricardo de Burgos,Match Report,,12.0,4.0,18.2,0.0,0,0,2019,Real Madrid
+2019-04-28,20:45,La Liga,Matchweek 35,Sun,Away,L,0,1,Rayo Vallecano,0.5,1.8,50.0,13273.0,Marcelo,4-2-2-2,4-2-3-1,Pablo González,Match Report,,9.0,3.0,18.2,1.0,0,0,2019,Real Madrid
+2019-05-05,16:15,La Liga,Matchweek 36,Sun,Home,W,3,2,Villarreal,2.7,0.7,60.0,46294.0,Marcelo,4-3-3,4-2-3-1,Jesús Gil,Match Report,,24.0,11.0,17.5,0.0,0,0,2019,Real Madrid
+2019-05-12,18:30,La Liga,Matchweek 37,Sun,Away,L,1,3,Real Sociedad,0.9,2.1,46.0,27322.0,Marcelo,4-3-3,4-2-3-1,Juan Martínez,Match Report,,6.0,2.0,13.4,0.0,0,0,2019,Real Madrid
+2019-05-19,12:00,La Liga,Matchweek 38,Sun,Home,L,0,2,Betis,0.9,1.3,47.0,56900.0,Marcelo,4-3-3,3-1-4-2,Alberto Undiano,Match Report,,9.0,2.0,21.1,0.0,0,0,2019,Real Madrid

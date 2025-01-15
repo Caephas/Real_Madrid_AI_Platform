@@ -7,7 +7,7 @@ This platform leverages cutting-edge AI technologies to enhance fan engagement a
 	2.	Match Commentary and Analysis: Real-time commentary powered by NLP and live data.
 	3.	Performance Prediction: Predicts match outcomes and player performance.
 	4.	Chatbot Interaction: An AI chatbot for fan queries and engagement.
-	5.	Transfer Market Analytics: Predicts transfer values and identifies undervalued talent.
+	
 
 Core Technologies
 	•	Backend: Python (FastAPI, TensorFlow, PyTorch, Firebase Admin SDK)

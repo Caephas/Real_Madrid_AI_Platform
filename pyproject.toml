@@ -33,6 +33,7 @@ accelerate = "^1.2.1"
 mlx = "^0.22.0"
 tf-keras = "^2.18.0"
 sentencepiece = "^0.2.0"
+gradio-client = "^1.5.4"
 
 
 [tool.poetry.group.dev.dependencies]

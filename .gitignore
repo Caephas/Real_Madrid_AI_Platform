@@ -5,3 +5,4 @@ __pycache__/
 .idea/
 poetry.lock
 .DS_Store
+./frontend/node_modules

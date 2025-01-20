@@ -1,5 +1,5 @@
 # **Real Madrid AI Backend**
-
+As a Real Madrid fan I built this as a side project just for the fun of it.
 A **microservice-based backend** designed to enhance Real Madrid fan engagement through AI-powered insights, personalized content, real-time match commentary, and predictive analytics. This backend leverages cutting-edge machine learning models, fine-tuned Large Language Models (LLMs), and scalable cloud technologies to deliver an interactive and immersive experience for fans.
 
 ---
@@ -9,11 +9,6 @@ A **microservice-based backend** designed to enhance Real Madrid fan engagement 
 2. [Technologies Used](#technologies-used)
 3. [Architecture](#architecture)
 4. [Setup Instructions](#setup-instructions)
-5. [Environment Variables](#environment-variables)
-6. [Endpoints and API Documentation](#endpoints-and-api-documentation)
-7. [Data Sources](#data-sources)
-8. [Project Structure](#project-structure)
-
 ---
 
 ## **Features**

@@ -20,8 +20,6 @@ poetry==2.0.0
 # Verify Poetry installation
 RUN $POETRY_HOME/bin/poetry --version
 ENV BLIS_ARCH=generic
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-service-account.json
-
 
 RUN poetry install --no-root
 

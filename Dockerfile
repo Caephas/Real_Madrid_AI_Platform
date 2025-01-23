@@ -28,4 +28,4 @@ RUN poetry install --no-root
 # Expose the application port
 #EXPOSE 8000
 # Command to start the application
-CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "$PORT"]
+CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

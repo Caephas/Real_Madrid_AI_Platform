@@ -5,5 +5,4 @@ __pycache__/
 .idea/
 poetry.lock
 .DS_Store
-./frontend/node_modules
-firebase-service-account.json
+.firebase-service-account.json

@@ -6,4 +6,3 @@ __pycache__/
 poetry.lock
 .DS_Store
 .firebase-service-account.json
-.Dockerfile

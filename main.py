@@ -4,6 +4,7 @@ from backend.match_commentary.api.match_commentary_api import app as match_comme
 from backend.performance_prediction.api.match_prediction_api import app as match_prediction_app
 from backend.personalized_content.api.recommendations_api import app as recommendations_app
 
+
 app = FastAPI()
 
 # Include each API as a router

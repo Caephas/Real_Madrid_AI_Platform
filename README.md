@@ -1,11 +1,11 @@
 # **Real Madrid AI Backend**
-
+![image info](./logo.png)
 As a passionate Real Madrid fan, I developed this project as a side project to explore the intersection of football and AI. This **microservice-based backend** enhances Real Madrid fan engagement through AI-powered insights, personalized content, real-time match commentary, and predictive analytics. The platform utilizes machine learning models, fine-tuned Large Language Models (LLMs), and scalable cloud technologies to give fans a more engaging eperience.
 
 ## **Features**
 
 ### 1. **Chatbot**
-- **Description**: An NLP-driven chatbot powered by a fine-tuned Large Language Model (LLM) that answers Real Madrid-related queries.
+- **Description**: A chatbot powered by a fine-tuned Large Language Model (LLM) unsloth/gemma-2b-bnb-4bit [Unsloth](https://github.com/unslothai/unsloth) that answers Real Madrid-related queries.
 - **Example Queries**:
   - "Who is Real Madrid's captain?"
   - "How many trophies has Real Madrid won?"
@@ -42,7 +42,7 @@ As a passionate Real Madrid fan, I developed this project as a side project to e
 - **NLP and ML**: Hugging Face Transformers, scikit-learn, XGBoost, LightGBM  
 - **Database**: Firebase Firestore  
 - **Data Processing**: Pandas, NumPy  
-- **Web Scraping**: Feedparser  
+- **Web Scraping**: [FBREF](https://fbref.com)  
 
 ### **APIs**
 - **API-Football**: Fetch live match data and statistics.

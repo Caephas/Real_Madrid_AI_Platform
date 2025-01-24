@@ -33,6 +33,8 @@ accelerate = "^1.2.1"
 tf-keras = "^2.18.0"
 sentencepiece = "^0.2.0"
 gradio-client = "^1.5.4"
+pytest = "^8.3.4"
+pytest-mock = "^3.14.0"
 
 
 [tool.poetry.group.dev.dependencies]

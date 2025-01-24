@@ -7,4 +7,3 @@ poetry.lock
 .DS_Store
 .firebase-service-account.json
 .vscode
-.DS_Store

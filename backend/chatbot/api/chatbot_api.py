@@ -15,7 +15,7 @@ client = Client(SPACE_NAME)
 
 # Request schema
 class ChatRequest(BaseModel):
-    user_input: str
+    user_input: str 
 
 # Root endpoint
 @app.get("/")

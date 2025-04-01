@@ -1,219 +1,172 @@
-# **Real Madrid AI Backend**
+# **Real Madrid AI Platform**
 
-![image info](./logo.png)
-As a passionate Real Madrid fan, I developed this project as a side project to explore the intersection of football and AI. This **microservice-based backend** enhances Real Madrid fan engagement through AI-powered insights, personalized content, real-time match commentary, and predictive analytics. The platform utilizes machine learning models, fine-tuned Large Language Models (LLMs), and scalable cloud technologies to give fans a more engaging eperience.
+![Real Madrid AI](./logo.png)
 
-## **Features**
+This project is a **modular AI-powered backend platform** built to enhance Real Madrid fan engagement through intelligent insights, predictions, and personalized content. It features real-time commentary, match outcome prediction, a custom chatbot, and personalized news — all deployed with scalable infrastructure on **AWS using Terraform, SageMaker, Lambda, and ECR**.
 
-### 1. **Chatbot**
-
-- **Description**: A chatbot powered by a fine-tuned Large Language Model (LLM) unsloth/gemma-2b-bnb-4bit [Unsloth](https://github.com/unslothai/unsloth) that answers Real Madrid-related queries.
-- **Example Queries**:
-  - "Who is Real Madrid's captain?"
-  - "How many trophies has Real Madrid won?"
-- **Technology**: Hugging Face Transformers, fine-tuned Llama model.
-
-### 2. **Real-Time Match Commentary**
-
-- **Description**: Provides live match updates and commentary using real-time data from API-Football.
-- **Key Features**:
-  - Fetches live match events (e.g., goals, fouls, substitutions).
-  - Generates detailed commentary for fan engagement.
-
-### 3. **Performance Prediction**
-
-- **Description**: Predicts match outcomes using historical match data and machine learning models.
-- **Key Features**:
-  - Leverages advanced ML models (e.g., Random Forest, XGBoost).
-  - Provides probabilities for Win, Draw, or Loss.
-
-### 4. **Personalized Content Recommendations**
-
-- **Description**: Recommends articles and news tailored to fan preferences.
-- **Key Features**:
-  - Scrapes news articles from RSS feeds.
-  - Stores and retrieves articles using Firestore.
-  - Recommends articles based on user preferences and interactions.
+Built by a Real Madrid fan, for Real Madrid fans. 🤍⚽
 
 ---
 
-## **Technologies Used**
+## Features
 
-### **Programming Languages**
+### 1. Chatbot
 
-- Python
+- **Gemini LLM**
+- **Handles natural queries** about players, trophies, match stats, and history.
+- **Deployed on AWS Lambda** with FastAPI + Mangum.
 
-### **Frameworks and Libraries**
+### 2. Real-Time Match Commentary
 
-- **Backend**: FastAPI  
-- **NLP and ML**: Hugging Face Transformers, scikit-learn, XGBoost, LightGBM  
-- **Database**: Firebase Firestore  
-- **Data Processing**: Pandas, NumPy  
-- **Web Scraping**: [FBREF](https://fbref.com)  
+- **Fetches live events** via API-Football.
+- **Generates human-readable commentary** from raw match data.
+- Designed for live fan experience during La Liga match days.
 
-### **APIs**
+### 3. Performance Prediction
 
-- **API-Football**: Fetch live match data and statistics.
+- Predict match outcome (Win, Draw, Loss) using:
+  - **Random Forest (Scikit-Learn)**
+  - (Coming Soon) **PyTorch Neural Network**
+- **Trained + deployed with SageMaker**, versioned, and monitored.
 
-### **Other Tools**
+### 4. Personalized Content
 
-- **Docker**: Containerization for deployment.  
-- **Poetry**: Dependency management and environment setup.
-
----
-
-## **Architecture**
-
-The project is designed as a modular, microservice-based system:
-
-1. **Microservices**  
-   Each feature (chatbot, match commentary, prediction, content) is implemented as an independent service.
-2. **Shared Components**  
-   Utilities like Firestore database operations are centralized in a shared folder.
-3. **Scalability**  
-   Dockerized for easy deployment and scalability.
-4. **Data Flow**  
-   External APIs and datasets feed the backend for predictions, content generation, and real-time commentary.
+- **Fetches articles via RSS feeds** (e.g. Managing Madrid).
+- Stores user preferences and articles in **DynamoDB**.
+- Recommends news based on interests.
 
 ---
 
-## **Setup Instructions**
+## Tech Stack
 
-### **1. Clone the Repository**
+| Layer                  | Tools                                                                 |
+|------------------------|-----------------------------------------------------------------------|
+| **Languages**          | Python                                                               |
+| **ML Libraries**       | scikit-learn, Hugging Face, PyTorch (planned), XGBoost               |
+| **API Layer**          | FastAPI, Mangum (for AWS Lambda)                                     |
+| **Cloud Infra**        | AWS Lambda, ECR, SageMaker, API Gateway, DynamoDB, S3                |
+| **Infra-as-Code**      | Terraform                                                             |
+| **Monitoring**         | CloudWatch Dashboards + Alarms                                       |
+| **Packaging**          | Docker, Poetry                                                        |
+| **CI/CD Ready**        | Makefile-driven DevOps                                               |
+
+---
+
+## Architecture Overview
+
+```
+Real-Madrid-AI-Platform/
+│
+├── services/
+│   ├── chatbot/
+│   ├── match_commentary/
+│   ├── performance_prediction/
+│   ├── personalized_content/
+│   ├── shared/
+│
+├── infra/
+│   ├── chatbot/
+│   ├── match_commentary/
+│   ├── performance_prediction/
+│   └── personalized_content/
+│
+├── data/
+│   ├── cleaned_laliga_matches.csv
+│   ├── real_madrid_facts.jsonl
+│
+├── notebooks/
+│   ├── scrape_data.ipynb
+│   └── real-madrid-EDA.ipynb
+```
+
+---
+
+## Setup & Usage
+
+### 1. Clone Repo
 
 ```bash
 git clone https://github.com/Caephas/Real_Madrid_AI_Platform
 cd Real_Madrid_AI_Platform
+```
 
-2. Set Up a Virtual Environment
+### 2. Set Up Python Env
 
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-3. Install Dependencies
-
-Using Poetry:
-
+```bash
 poetry install
-
-4. Set Up Environment Variables
- • Create a .env file in the root directory.
- • Add the following environment variables:
-
-API_FOOTBALL_BASE_URL=<your-api-football-base-url>
-API_FOOTBALL_KEY=<your-api-football-key>
-
-FIREBASE_TYPE=<your-firebase-type>
-FIREBASE_PROJECT_ID=<your-firebase-project-id>
-FIREBASE_PRIVATE_KEY_ID=<your-private-key-id>
-FIREBASE_PRIVATE_KEY=<your-private-key>  # Replace "\n" with actual newlines if required
-FIREBASE_CLIENT_EMAIL=<your-client-email>
-FIREBASE_CLIENT_ID=<your-client-id>
-FIREBASE_AUTH_URI=<your-auth-uri>
-FIREBASE_TOKEN_URI=<your-token-uri>
-FIREBASE_AUTH_PROVIDER_X509_CERT_URL=<your-auth-provider-cert-url>
-FIREBASE_CLIENT_X509_CERT_URL=<your-client-cert-url>
-
- • Ensure all variables are correctly set in the .env file.
-
-5. Build and Run the Docker Image:
-  1. Build the Docker Image:
-   docker build -t real-madrid-ai-backend .
-  2. docker run -d -p 8000:8000 real-madrid-ai-backend
 ```
 
-## Project Structure
+### 3. Configure `.env` Files
 
-## **Endpoints and API Documentation**
+Each service has its own `.env` for secrets (e.g. API-Football, SageMaker).
 
-| **Microservice**          | **Endpoint**              | **Method** | **Description**                                        |
-|---------------------------|---------------------------|------------|-------------------------------------------------------|
-| **Chatbot**               | `/chatbot`                      | `GET`      | Health check for the Chatbot microservice.            |
-|                           | `/chatbot/chat`                  | `POST`     | Handles user queries and returns AI-generated responses. |
-| **Match Commentary**      | `/commentary`                      | `GET`      | Health check for the Match Commentary microservice.   |
-|                           | `/commentary/{team_id}`       | `GET`      | Fetches and stores live match events for commentary.   |
-| **Performance Prediction**| `/prediction`                      | `GET`      | Health check for the Performance Prediction microservice. |
-|                           | `/prediction/match`         | `POST`     | Predicts match outcomes based on pre-match data.      |
-| **Personalized Content**  | `/recommendations`                      | `GET`      | Health check for the Personalized Content microservice. |
-|                           | `/recommendations/{user_id}`    | `GET`      | Provides personalized news recommendations.           |****
+Global environment variables for training:
 
-## **Data Sources**
-
-1. **Historical Match Data**:
-   - `cleaned_laliga_matches.csv`: Preprocessed match data for model training and predictions.
-   - `la_liga_10_seasons.csv`: Raw match data for La Liga.
-
-2. **News Articles**:
-   - Scraped from RSS feeds (e.g., Managing Madrid).
-
-3. **LLM Fine-Tuning Data**:
-   - `real_madrid_facts.jsonl`: Domain-specific data for fine-tuning the chatbot.
-
-```
-Real-Madrid-AI-project/
-│
-├── backend/
-│   ├── chatbot/                  # Chatbot microservice
-│   ├── match_commentary/         # Real-time match commentary microservice
-│   ├── performance_prediction/   # Match outcome prediction microservice
-│   ├── personalized_content/     # Content recommendation microservice
-│   ├── shared/                   # Shared utilities (e.g., Firestore operations)
-│
-├── data/                         # Datasets and processed data
-│   ├── cleaned_laliga_matches.csv
-│   ├── la_liga_10_seasons.csv
-│   ├── real_madrid_10_seasons.csv
-│   ├── real_madrid_facts.jsonl
-│
-├── notebooks/                    # Jupyter notebooks for data preprocessing and analysis
-│   ├── real-madrid-EDA.ipynb
-│   ├── scrape_data.ipynb
-│
-├── .env                          # Environment variables
-├── .gitignore                    # Git ignore file
-├── Dockerfile                    # Dockerfile for containerization
-├── pyproject.toml                # Poetry project configuration
-
+```env
+S3_BUCKET=real-madrid-performance-data-bucket
+SAGEMAKER_ROLE_ARN=arn:aws:iam::<account>:role/<sagemaker-role>
 ```
 
-## **Improvements**
+### 4. Deploy Each Service
 
-While the current implementation provides a solid foundation, the following enhancements can improve the overall application and user experience:
+Each microservice has a `Makefile`:
 
-### **1. Implement Cron Jobs for Automation**
+#### Example: Match Commentary
 
-- **Purpose**: Automate repetitive tasks like fetching live match data or scraping news articles periodically.
-- **Proposed Features**:
-  - Fetch new match events every 5 minutes using API-Football.
-  - Scrape and categorize fresh articles from RSS feeds daily.
-- **Tools**: Use a task scheduler like `cron` .
+```bash
+cd services/match_commentary
+make all
+make monitoring
+make alerts
+```
 
-### **2. Enhanced Chatbot with Multi-Turn Conversations**
+#### Example: Performance Prediction (SageMaker)
 
-- **Purpose**: Improve chatbot interaction by enabling contextual, multi-turn conversations.
-- **Proposed Features**:
-  - Maintain chat history to provide more personalized and contextual responses.
-  - Use a better model and gather more data for finetuning
+```bash
+cd services/performance_prediction
+make split-data
+make train
+make predict
+make monitoring
+make alerts
+```
 
-### **3. Add User Authentication and Profiles**
+---
 
-- **Purpose**: Personalize recommendations and predictions for authenticated users.
-- **Proposed Features**:
-  - Add sign-up and login functionality with Firebase Authentication.
-  - Store user preferences, chat history, and saved articles in Firestore.
-- **Tools**: Leverage Firebase Authentication and Firestore for seamless integration.
+## Monitoring & Alerts
 
-### **4. Scalable Deployment with Kubernetes**
+- **Dashboards**: Created via Terraform using CloudWatch widgets
+- **Alarms**:
+  - High Error Rate
+  - High Latency (p90 > 1s)
 
-- **Purpose**: Enhance the scalability and reliability of the backend.
-- **Proposed Features**:
-  - Deploy the microservices in a Kubernetes cluster for load balancing and fault tolerance.
-  - Set up horizontal pod autoscaling to handle increased traffic during matches.
-- **Tools**: Use Kubernetes with a cloud provider (e.g., GKE, EKS).
+---
 
-### **5. Advanced Machine Learning Models**
+## Endpoints Overview
 
-- **Purpose**: Improve the accuracy of predictions and recommendations.
-- **Proposed Features**:
-  - Train deep learning models for performance prediction using PyTorch.
-  - Implement collaborative filtering or content-based recommendations for personalized articles.
+| Microservice            | Endpoint                                | Method  | Description                        |
+|------------------------|------------------------------------------|---------|------------------------------------|
+| `chatbot`              | `/chatbot/chat`                          | POST    | Ask Real Madrid facts              |
+| `match_commentary`     | `/commentary/{team_id}`                  | GET     | Live match events & commentary     |
+| `performance_prediction`| `/prediction/match`                     | POST    | Predict match result               |
+| `personalized_content` | `/recommendations/{user_id}`             | GET     | Get personalized articles          |
+
+---
+
+## Coming Soon
+
+### Neural Network Training (PyTorch)
+
+- Train a **DNN with PyTorch** using SageMaker
+- Compare with RandomForest for accuracy & latency
+
+---
+
+## Done So Far
+
+Chatbot end-to-end  
+Match commentary + API-Football integration  
+ML model training + SageMaker deployment  
+CloudWatch dashboards & alerts  
+Dockerized microservices, Makefiles, Terraform infra  
+DynamoDB for content & user data  

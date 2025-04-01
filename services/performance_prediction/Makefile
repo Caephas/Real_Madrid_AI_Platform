@@ -11,9 +11,18 @@ INFRA_DIR := ../../infra/$(SERVICE_NAME)
 S3_BUCKET := real-madrid-performance-data-bucket
 
 # -------- INFRA --------
+
 setup:
 	cd $(INFRA_DIR) && terraform init && terraform apply -auto-approve
 
+monitoring:
+	cd $(INFRA_DIR) && terraform init && terraform apply -target=aws_cloudwatch_dashboard.lambda_dashboard -auto-approve
+
+alerts:
+	cd $(INFRA_DIR) && terraform apply \
+		-target=aws_cloudwatch_metric_alarm.error_alarm \
+		-target=aws_cloudwatch_metric_alarm.duration_alarm \
+		-auto-approve
 destroy:
 	cd $(INFRA_DIR) && terraform destroy -auto-approve
 

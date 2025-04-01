@@ -6,7 +6,14 @@ IMAGE_URI := $(ECR_REPO):$(IMAGE_TAG)
 TERRAFORM_DIR := ../../infra/$(SERVICE_NAME)
 
 # ======== COMMANDS ==========
+monitoring:
+	cd $(TERRAFORM_DIR) && terraform apply -target=aws_cloudwatch_dashboard.lambda_dashboard -auto-approve
 
+alerts:
+	cd $(TERRAFORM_DIR) && terraform apply \
+		-target=aws_cloudwatch_metric_alarm.error_alarm \
+		-target=aws_cloudwatch_metric_alarm.duration_alarm \
+		-auto-approve	
 build:
 	docker build -t $(SERVICE_NAME)-lambda .
 

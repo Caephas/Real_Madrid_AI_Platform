@@ -5,7 +5,6 @@ __pycache__/
 .idea/
 poetry.lock
 .DS_Store
-.firebase-service-account.json
 .vscode
 
 # Terraform state and plan files (inside infra/)

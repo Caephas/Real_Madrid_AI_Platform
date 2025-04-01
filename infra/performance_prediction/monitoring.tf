@@ -1,13 +1,16 @@
 variable "lambda_function_name" {
   description = "Lambda function name to monitor"
   type        = string
-  default     = "personalized-content-service"
+  default     = "performance-prediction-service"
 }
 
 variable "aws_region" {
   default = "eu-west-1"
 }
 
+# --------------------
+# CloudWatch Dashboard
+# --------------------
 resource "aws_cloudwatch_dashboard" "lambda_dashboard" {
   dashboard_name = "${var.lambda_function_name}-dashboard"
 
@@ -28,13 +31,16 @@ resource "aws_cloudwatch_dashboard" "lambda_dashboard" {
             [ ".", "Errors", ".", "." ],
             [ ".", "Duration", ".", ".", { "stat": "p90" } ]
           ],
-          title    = "Lambda - Invocations, Errors, Duration (p90)"
+          title    = "Performance Prediction - Invocations, Errors, Duration (p90)"
         }
       }
     ]
   })
 }
 
+# --------------------
+# Alarm: High Errors
+# --------------------
 resource "aws_cloudwatch_metric_alarm" "error_alarm" {
   alarm_name          = "${var.lambda_function_name}-HighErrors"
   comparison_operator = "GreaterThanThreshold"
@@ -49,6 +55,10 @@ resource "aws_cloudwatch_metric_alarm" "error_alarm" {
     FunctionName = var.lambda_function_name
   }
 }
+
+# --------------------
+# Alarm: High Latency
+# --------------------
 resource "aws_cloudwatch_metric_alarm" "duration_alarm" {
   alarm_name          = "${var.lambda_function_name}-HighLatency"
   comparison_operator = "GreaterThanThreshold"

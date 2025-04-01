@@ -1,7 +1,7 @@
 variable "lambda_function_name" {
   description = "Lambda function name to monitor"
   type        = string
-  default     = "personalized-content-service"
+  default     = "match-commentary-service"
 }
 
 variable "aws_region" {
@@ -28,7 +28,7 @@ resource "aws_cloudwatch_dashboard" "lambda_dashboard" {
             [ ".", "Errors", ".", "." ],
             [ ".", "Duration", ".", ".", { "stat": "p90" } ]
           ],
-          title    = "Lambda - Invocations, Errors, Duration (p90)"
+          title    = "Match Commentary - Invocations, Errors, Duration (p90)"
         }
       }
     ]

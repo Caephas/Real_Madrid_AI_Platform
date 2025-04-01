@@ -6,6 +6,14 @@ IMAGE_URI := $(ECR_REPO):$(IMAGE_TAG)
 INFRA_DIR=../../infra/match_commentary
 
 # ======== COMMANDS ==========
+monitoring:
+	cd $(INFRA_DIR) && terraform init && terraform apply -target=aws_cloudwatch_dashboard.lambda_dashboard -auto-approve	
+
+alerts:
+	cd $(INFRA_DIR) && terraform apply \
+		-target=aws_cloudwatch_metric_alarm.error_alarm \
+		-target=aws_cloudwatch_metric_alarm.duration_alarm \
+		-auto-approve
 
 build:
 	docker build -t $(SERVICE_NAME)-lambda .

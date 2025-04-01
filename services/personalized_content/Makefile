@@ -5,6 +5,19 @@ REGION=eu-west-1
 IMAGE_REPO=$(AWS_ACCOUNT_ID).dkr.ecr.$(REGION).amazonaws.com/$(SERVICE_NAME)-lambda-repo
 TAG=latest
 INFRA_DIR=../../infra/personalized_content
+LAMBDA_NAME := personalized-content-service
+
+
+# ======== MONITORING ==========
+monitoring:
+	cd $(INFRA_DIR) && terraform init && terraform apply -auto-approve
+	@echo "Dashboard: https://eu-west-1.console.aws.amazon.com/cloudwatch/home#dashboards:name=$(LAMBDA_NAME)-dashboard"
+
+alerts:
+	cd $(INFRA_DIR) && terraform apply \
+		-target=aws_cloudwatch_metric_alarm.error_alarm \
+		-target=aws_cloudwatch_metric_alarm.duration_alarm \
+		-auto-approve
 # ---------- COMMANDS ----------
 
 # 0. ECR Login

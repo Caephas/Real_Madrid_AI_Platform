@@ -7,3 +7,19 @@ poetry.lock
 .DS_Store
 .firebase-service-account.json
 .vscode
+
+# Terraform state and plan files (inside infra/)
+infra/**/.terraform/
+infra/**/*.tfstate
+infra/**/*.tfstate.*
+infra/**/*.tfvars
+infra/**/*.tfplan
+infra/**/.terraform.lock.hcl
+
+# Catch any top-level ones
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan
+.terraform/
+.terraform.lock.hcl

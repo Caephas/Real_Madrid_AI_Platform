@@ -5,7 +5,7 @@ import pandas as pd
 runtime = boto3.client("sagemaker-runtime", region_name="eu-west-1")
 
 # Replace with your actual deployed endpoint name
-endpoint = "sagemaker-scikit-learn-2025-04-01-17-39-13-974"
+endpoint = "sagemaker-scikit-learn-2025-04-02-12-28-03-049"
 
 # Input DataFrame
 sample = pd.DataFrame([{

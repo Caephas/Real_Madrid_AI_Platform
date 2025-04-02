@@ -40,6 +40,8 @@ split-data:
 train:
 	SAGEMAKER_ROLE_ARN=$(SAGEMAKER_ROLE_ARN) S3_BUCKET=$(S3_BUCKET) poetry run python $(SERVICE_DIR)/scripts/run_training_job.py
 
+train-dnn:
+	S3_BUCKET=$(S3_BUCKET) poetry run python $(SERVICE_DIR)/scripts/run_dnn_training_job.py
 # make sure to replace the endpoint from sagemaker before running this
 predict:
 	poetry run python $(SERVICE_DIR)/api/match_prediction_api.py
@@ -56,3 +58,7 @@ clean: clean-model clean-input
 # -------- ALL-IN-ONE --------
 all: setup split-data train
 	@echo "Performance Prediction pipeline complete!"
+
+# -------- DESTROY ALL RESOURCES --------
+destroy-all: clean destroy
+	@echo "All AWS resources created for Real Madrid - Performance Prediction have been destroyed."

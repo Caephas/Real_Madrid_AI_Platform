@@ -157,8 +157,8 @@ make alerts
 
 ### Neural Network Training (PyTorch)
 
-- Train a **DNN with PyTorch** using SageMaker
-- Compare with RandomForest for accuracy & latency
+- Train a **DNN with PyTorch** using SageMaker (Done)
+- Compare with RandomForest for accuracy & latency  (Done)
 
 ---
 

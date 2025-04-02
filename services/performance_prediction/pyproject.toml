@@ -15,7 +15,8 @@ dependencies = [
     "scikit-learn (>=1.6.1,<2.0.0)",
     "joblib (>=1.4.2,<2.0.0)",
     "sagemaker (>=2.243.0,<3.0.0)",
-    "python-dotenv (>=1.1.0,<2.0.0)"
+    "python-dotenv (>=1.1.0,<2.0.0)",
+    "numpy (==1.26)"
 ]
 
 

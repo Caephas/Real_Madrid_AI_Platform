@@ -144,6 +144,7 @@ resource "aws_apigatewayv2_route" "match_commentary_route" {
 
 resource "aws_ecr_repository" "match_commentary_repo" {
   name = "match-commentary-lambda-repo"
+  force_delete = true
 }
 resource "aws_apigatewayv2_stage" "match_commentary_stage" {
   api_id      = aws_apigatewayv2_api.match_commentary_api.id

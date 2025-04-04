@@ -15,6 +15,7 @@ resource "aws_dynamodb_table" "articles" {
 }
 resource "aws_ecr_repository" "personalized_content_repo" {
   name = "personalized-content-lambda-repo"
+  force_delete = true
 }
 resource "aws_dynamodb_table" "users" {
   name         = "users"

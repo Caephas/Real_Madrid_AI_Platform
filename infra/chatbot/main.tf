@@ -4,6 +4,7 @@ provider "aws" {
 
 resource "aws_ecr_repository" "chatbot_repo" {
   name = "chatbot-lambda-repo"
+  force_delete = true
 }
 
 resource "aws_iam_role" "lambda_exec_role" {

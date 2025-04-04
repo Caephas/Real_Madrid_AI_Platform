@@ -28,7 +28,7 @@ if __name__ == "__main__":
     X_train, y_train = train_df[features], train_df[target]
     X_test, y_test = test_df[features], test_df[target]
 
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model = RandomForestClassifier(n_estimators=100, random_state=2526)
     model.fit(X_train, y_train)
 
     joblib.dump(model, os.path.join(args.model_dir, "randomforest_model.pkl"))

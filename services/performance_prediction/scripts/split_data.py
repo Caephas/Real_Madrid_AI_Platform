@@ -29,6 +29,6 @@ session = sagemaker.Session()
 train_s3_uri = session.upload_data(train_path_local, bucket=bucket, key_prefix=f"{prefix}/train")
 test_s3_uri = session.upload_data(test_path_local, bucket=bucket, key_prefix=f"{prefix}/test")
 
-print("✅ Uploaded to S3:")
+print("Uploaded to S3:")
 print("Train CSV:", train_s3_uri)
 print("Test CSV:", test_s3_uri)

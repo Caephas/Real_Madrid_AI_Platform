@@ -1,5 +1,6 @@
 resource "aws_s3_bucket" "performance_prediction_bucket" {
   bucket = "real-madrid-performance-data-bucket"
+  force_destroy = true
 
   tags = {
     Name = "Performance Prediction Data Bucket"

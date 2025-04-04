@@ -23,8 +23,6 @@ alerts:
 		-target=aws_cloudwatch_metric_alarm.error_alarm \
 		-target=aws_cloudwatch_metric_alarm.duration_alarm \
 		-auto-approve
-destroy:
-	cd $(INFRA_DIR) && terraform destroy -auto-approve
 
 plan:
 	cd $(INFRA_DIR) && terraform plan
@@ -36,13 +34,12 @@ show:
 split-data:
 	S3_BUCKET=$(S3_BUCKET) poetry run python $(SERVICE_DIR)/scripts/split_data.py
 
-
 train:
 	SAGEMAKER_ROLE_ARN=$(SAGEMAKER_ROLE_ARN) S3_BUCKET=$(S3_BUCKET) poetry run python $(SERVICE_DIR)/scripts/run_training_job.py
 
 train-dnn:
 	S3_BUCKET=$(S3_BUCKET) poetry run python $(SERVICE_DIR)/scripts/run_dnn_training_job.py
-# make sure to replace the endpoint from sagemaker before running this
+
 predict:
 	poetry run python $(SERVICE_DIR)/api/match_prediction_api.py
 
@@ -60,5 +57,14 @@ all: setup split-data train
 	@echo "Performance Prediction pipeline complete!"
 
 # -------- DESTROY ALL RESOURCES --------
+destroy:
+	@echo "Destroying all resources for $(SERVICE_NAME)..."
+	cd $(INFRA_DIR) && terraform destroy -auto-approve
+	@echo "Deleting all S3 model data (if any)..."
+	-aws s3 rm s3://$(S3_BUCKET)/performance/model/ --recursive
+	@echo "Deleting all S3 input data (if any)..."
+	-aws s3 rm s3://$(S3_BUCKET)/performance/input/ --recursive
+	@echo "Cleanup complete for $(SERVICE_NAME)"
+
 destroy-all: clean destroy
 	@echo "All AWS resources created for Real Madrid - Performance Prediction have been destroyed."

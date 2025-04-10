@@ -55,7 +55,7 @@ resource "aws_cloudwatch_metric_alarm" "duration_alarm" {
   metric_name         = "Duration"
   namespace           = "AWS/Lambda"
   period              = 60
-  extended_statistic  = "p90" # ✅ use this instead of 'statistic'
+  extended_statistic  = "p90"
   threshold           = 1000
   alarm_description   = "Triggers when p90 duration exceeds 1s"
   dimensions = {

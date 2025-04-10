@@ -1,41 +1,72 @@
 import boto3
 import pandas as pd
+import datetime
 
-# Initialize SageMaker runtime client
-runtime = boto3.client("sagemaker-runtime", region_name="eu-west-1")
+# --- Step 1 & 2: Get Match Info & Static Features ---
+match_date_str = "2025-04-13" 
+match_time_str = "15:15"
+is_rm_home = False 
+opponent_name = "Alavés"
 
-# Replace with your actual deployed endpoint name
-endpoint = "sagemaker-scikit-learn-2025-04-04-21-25-36-587"
+match_date = pd.to_datetime(match_date_str)
+hour_val = int(match_time_str.split(':')[0])
+day_code_val = match_date.dayofweek
+venue_code_val = 1 if is_rm_home else 0
 
-# Input DataFrame
-sample = pd.DataFrame([{
-    "venue_code": 1,
-    "team": 4,
-    "opp_code": 2,
-    "hour": 20,
-    "day_code": 6,
-    "gf_rolling": 1.5,
-    "ga_rolling": 0.4,
-    "sh_rolling": 12.1,
-    "sot_rolling": 5.3,
-    "dist_rolling": 40.2,
-    "fk_rolling": 2.1,
-    "pk_rolling": 0.0,
-    "pkatt_rolling": 0.1,
-    "opp_gf_rolling": 1.0,
-    "opp_ga_rolling": 1.3,
-    "opp_sh_rolling": 10.5,
-    "opp_sot_rolling": 4.0,
-    "opp_dist_rolling": 38.0,
-    "opp_fk_rolling": 1.9,
-    "opp_pk_rolling": 0.0,
-    "opp_pkatt_rolling": 0.1
-}])
+opp_code_val = 0
 
-# Convert to JSON
-payload = sample.to_json(orient="records")
+# TODO #1:
+# --- Step 3 & 4: Get Recent Data & Calculate Rolling Averages ---
+# This requires external functions/data sources to get stats for last 5 games
+# for both RM and Alavés BEFORE match_date_str
 
-# Send request to SageMaker endpoint
+# TODO: --- Hypothetical Placeholder Values (REPLACE WITH ACTUAL CALCULATIONS) ---
+rm_last_5_stats = {'gf': 2.2, 'ga': 0.8, 'sh': 15.0, 'sot': 6.1, 'dist': 17.5, 'fk': 0.4, 'pk': 0.2, 'pkatt': 0.2}
+alaves_last_5_stats = {'gf': 0.8, 'ga': 1.4, 'sh': 9.5, 'sot': 3.2, 'dist': 19.1, 'fk': 0.2, 'pk': 0.0, 'pkatt': 0.0}
+# --- End Placeholder Values ---
+
+# --- Step 5: Assemble Payload ---
+prediction_input = {
+    "venue_code": venue_code_val,
+    "opp_code": opp_code_val,
+    "hour": hour_val,
+    "day_code": day_code_val,
+    "gf_rolling": rm_last_5_stats['gf'],
+    "ga_rolling": rm_last_5_stats['ga'],
+    "sh_rolling": rm_last_5_stats['sh'],
+    "sot_rolling": rm_last_5_stats['sot'],
+    "dist_rolling": rm_last_5_stats['dist'],
+    "fk_rolling": rm_last_5_stats['fk'],
+    "pk_rolling": rm_last_5_stats['pk'],
+    "pkatt_rolling": rm_last_5_stats['pkatt'],
+    "opp_gf_rolling": alaves_last_5_stats['gf'],
+    "opp_ga_rolling": alaves_last_5_stats['ga'],
+    "opp_sh_rolling": alaves_last_5_stats['sh'],
+    "opp_sot_rolling": alaves_last_5_stats['sot'],
+    "opp_dist_rolling": alaves_last_5_stats['dist'], 
+    "opp_fk_rolling": alaves_last_5_stats['fk'],  
+    "opp_pk_rolling": alaves_last_5_stats['pk'],
+    "opp_pkatt_rolling": alaves_last_5_stats['pkatt']
+}
+# Verify features against the list used in training
+training_features = [
+    'venue_code', 'opp_code', 'hour', 'day_code', 'gf_rolling', 'ga_rolling',
+    'sh_rolling', 'sot_rolling', 'dist_rolling', 'fk_rolling', 'pk_rolling',
+    'pkatt_rolling', 'opp_gf_rolling', 'opp_ga_rolling', 'opp_sh_rolling',
+    'opp_sot_rolling', 'opp_dist_rolling', 'opp_fk_rolling', 'opp_pk_rolling',
+    'opp_pkatt_rolling'
+] 
+
+# Create DataFrame in correct order
+input_df = pd.DataFrame([prediction_input], columns=training_features)
+
+
+# --- Step 6: Format and Send to Endpoint ---
+runtime = boto3.client("sagemaker-runtime", region_name="eu-west-1") 
+endpoint = "sagemaker-scikit-learn-2025-04-10-14-56-48-770"
+
+payload = input_df.to_json(orient="records")
+
 response = runtime.invoke_endpoint(
     EndpointName=endpoint,
     ContentType="application/json",
@@ -43,4 +74,6 @@ response = runtime.invoke_endpoint(
 )
 
 # Print result
-print("Prediction:", response['Body'].read().decode())
+print("Prediction Input Sent:")
+print(payload)
+print("\nPrediction Result:", response['Body'].read().decode())

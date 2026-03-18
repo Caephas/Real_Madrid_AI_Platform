@@ -53,3 +53,20 @@ def predict_match(req: PredictRequest, db: Session = Depends(get_db)):
 def list_opponents():
     """Return sorted list of valid opponent names from training mappings."""
     return {"opponents": get_known_opponents()}
+
+
+@router.get("/next-match")
+def next_match():
+    """Return the next upcoming Real Madrid La Liga fixture."""
+    from app.fixtures import get_next_match
+    result = get_next_match()
+    if result is None:
+        return {"message": "No upcoming fixtures — season is over"}
+    return result
+
+
+@router.get("/fixtures")
+def remaining_fixtures():
+    """Return all remaining Real Madrid La Liga fixtures."""
+    from app.fixtures import get_remaining_fixtures
+    return {"fixtures": get_remaining_fixtures()}

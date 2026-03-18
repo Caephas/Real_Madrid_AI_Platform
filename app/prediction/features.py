@@ -23,10 +23,25 @@ ROLLING_COLS = [
     "dist_rolling", "fk_rolling", "pk_rolling", "pkatt_rolling",
 ]
 
+# fbref uses ASCII names; fixture schedule / opponent mapping may use accented names
+_TEAM_NAME_ALIASES: dict[str, str] = {
+    "Atlético Madrid": "Atletico Madrid",
+    "Alavés": "Alaves",
+    "Cádiz": "Cadiz",
+    "Leganés": "Leganes",
+    "Betis": "Real Betis",
+}
+
+
+def _normalize_team_name(name: str) -> str:
+    """Map accented / alternate names to the fbref ASCII form stored in team_stats."""
+    return _TEAM_NAME_ALIASES.get(name, name)
+
 
 def _get_team_rolling(db: Session, team_name: str) -> dict[str, float]:
     """Lookup rolling stats for a team from PostgreSQL. O(1) — PK lookup."""
-    stats = db.get(TeamStats, team_name)
+    normalized = _normalize_team_name(team_name)
+    stats = db.get(TeamStats, normalized)
     if stats is None:
         raise ValueError(f"No rolling stats found for '{team_name}'. Run `make pipeline` to populate team_stats.")
     return {col: getattr(stats, col) for col in ROLLING_COLS}

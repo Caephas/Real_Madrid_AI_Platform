@@ -1,172 +1,183 @@
-# **Real Madrid AI Platform**
+# Real Madrid AI Platform
 
-![Real Madrid AI](./logo.png)
+An AI-powered platform for Real Madrid fans. Combines match prediction, live commentary, personalized news, and an agentic chatbot into a single application running fully local via Docker.
 
-This project is a **modular AI-powered backend platform** built to enhance Real Madrid fan engagement through intelligent insights, predictions, and personalized content. It features real-time commentary, match outcome prediction, a custom chatbot, and personalized news — all deployed with scalable infrastructure on **AWS using Terraform, SageMaker, Lambda, and ECR**.
+## Architecture
 
-Built by a Real Madrid fan, for Real Madrid fans. 🤍⚽
+```mermaid
+graph TB
+    subgraph "Frontend [:8080]"
+        FE["Vite + React SPA"]
+    end
 
----
+    subgraph "FastAPI Backend [:8000]"
+        direction TB
+        APP["FastAPI Monolith"]
+        M1["chatbot/ (Agent)"]
+        M2["prediction/ (XGBoost)"]
+        M3["commentary/ (API-Football)"]
+        M4["content/ (RSS + Recs)"]
+        APP --> M1
+        APP --> M2
+        APP --> M3
+        APP --> M4
+    end
+
+    subgraph "Infrastructure (Docker)"
+        OLL["Ollama [:11434]"]
+        PG["PostgreSQL [:5432]"]
+        VOL["./models/ (volume)"]
+    end
+
+    FE -->|HTTP| APP
+    M1 --> OLL
+    M1 -.->|tool calls| M2
+    M1 -.->|tool calls| M3
+    M1 -.->|tool calls| M4
+    M2 --> VOL
+    M2 --> PG
+    M3 --> PG
+    M4 --> PG
+
+    style APP stroke:#0a0,stroke-width:3px
+```
+
 
 ## Features
 
-### 1. Chatbot
-
-- **Gemini LLM**
-- **Handles natural queries** about players, trophies, match stats, and history.
-- **Deployed on AWS Lambda** with FastAPI + Mangum.
-
-### 2. Real-Time Match Commentary
-
-- **Fetches live events** via API-Football.
-- **Generates human-readable commentary** from raw match data.
-- Designed for live fan experience during La Liga match days.
-
-### 3. Performance Prediction
-
-- Predict match outcome (Win, Draw, Loss) using:
-  - **Random Forest (Scikit-Learn)**
-  - (Coming Soon) **PyTorch Neural Network**
-- **Trained + deployed with SageMaker**, versioned, and monitored.
-
-### 4. Personalized Content
-
-- **Fetches articles via RSS feeds** (e.g. Managing Madrid).
-- Stores user preferences and articles in **DynamoDB**.
-- Recommends news based on interests.
-
----
+| Feature | Description |
+|---------|-------------|
+| **Agent Chatbot** | LLM-powered agent (Ollama/Gemini) that calls prediction, commentary, and news tools to answer fan questions |
+| **Match Prediction** | XGBoost model trained on 10 seasons of La Liga data predicting W/D/L probabilities |
+| **Live Commentary** | Polls API-Football for live match events, generates human-readable commentary |
+| **Personalized News** | RSS-ingested articles categorized by topic with user preference-based recommendations |
 
 ## Tech Stack
 
-| Layer                  | Tools                                                                 |
-|------------------------|-----------------------------------------------------------------------|
-| **Languages**          | Python                                                               |
-| **ML Libraries**       | scikit-learn, Hugging Face, PyTorch (planned), XGBoost               |
-| **API Layer**          | FastAPI, Mangum (for AWS Lambda)                                     |
-| **Cloud Infra**        | AWS Lambda, ECR, SageMaker, API Gateway, DynamoDB, S3                |
-| **Infra-as-Code**      | Terraform                                                             |
-| **Monitoring**         | CloudWatch Dashboards + Alarms                                       |
-| **Packaging**          | Docker, Poetry                                                        |
-| **CI/CD Ready**        | Makefile-driven DevOps                                               |
+| Layer | Technology |
+|-------|-----------|
+| Backend | FastAPI, SQLAlchemy, Alembic |
+| Database | PostgreSQL 16 |
+| ML | XGBoost, scikit-learn, pandas |
+| LLM | Ollama (local, default) / Gemini (optional) |
+| Frontend | Vite, React, TypeScript, Tailwind CSS |
+| Infrastructure | Docker, docker-compose |
 
----
+## Quick Start
 
-## Architecture Overview
+### Prerequisites
 
-```
-Real-Madrid-AI-Platform/
-│
-├── services/
-│   ├── chatbot/
-│   ├── match_commentary/
-│   ├── performance_prediction/
-│   ├── personalized_content/
-│   ├── shared/
-│
-├── infra/
-│   ├── chatbot/
-│   ├── match_commentary/
-│   ├── performance_prediction/
-│   └── personalized_content/
-│
-├── data/
-│   ├── cleaned_laliga_matches.csv
-│   ├── real_madrid_facts.jsonl
-│
-├── notebooks/
-│   ├── scrape_data.ipynb
-│   └── real-madrid-EDA.ipynb
-```
+- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
+- [Python 3.11+](https://www.python.org/downloads/)
+- [Node.js 18+](https://nodejs.org/) (for frontend)
 
----
-
-## Setup & Usage
-
-### 1. Clone Repo
+### 1. Clone & Configure
 
 ```bash
-git clone https://github.com/Caephas/Real_Madrid_AI_Platform
+git clone https://github.com/Caephas/Real_Madrid_AI_Platform.git
 cd Real_Madrid_AI_Platform
+cp .env.example .env
+# Edit .env with your API keys (API_FOOTBALL_KEY, optional GEMINI_API_KEY)
 ```
 
-### 2. Set Up Python Env
+### 2. Start Services
 
 ```bash
-poetry install
+make setup
+# Starts PostgreSQL, Ollama, pulls llama3.2 model, starts backend
 ```
 
-### 3. Configure `.env` Files
-
-Each service has its own `.env` for secrets (e.g. API-Football, SageMaker).
-
-Global environment variables for training:
-
-```env
-S3_BUCKET=real-madrid-performance-data-bucket
-SAGEMAKER_ROLE_ARN=arn:aws:iam::<account>:role/<sagemaker-role>
-```
-
-### 4. Deploy Each Service
-
-Each microservice has a `Makefile`:
-
-#### Example: Match Commentary
+### 3. Start Frontend
 
 ```bash
-cd services/match_commentary
-make all
-make monitoring
-make alerts
+cd frontend && npm install && npm run dev
+# Open http://localhost:8080
 ```
 
-#### Example: Performance Prediction (SageMaker)
+### Local Dev (without Docker for backend)
 
 ```bash
-cd services/performance_prediction
-make split-data
-make train
-make predict
-make monitoring
-make alerts
+docker-compose up -d db ollama     # Start DB + LLM only
+pip install -e ".[dev]"            # Install Python deps
+uvicorn app.main:app --reload      # Backend with hot reload
 ```
 
----
+## Data Pipeline
 
-## Monitoring & Alerts
+The ML model is trained offline from historical La Liga data:
 
-- **Dashboards**: Created via Terraform using CloudWatch widgets
-- **Alarms**:
-  - High Error Rate
-  - High Latency (p90 > 1s)
+```bash
+make pipeline
+# 1. Scrapes fbref.com for match + shooting stats
+# 2. Engineers features (rolling averages, opponent stats, deterministic mappings)
+# 3. Trains XGBoost + RandomForest → exports best model to models/
+# 4. Updates team_stats table in PostgreSQL
+```
 
----
+After training, restart the backend to load the new model:
 
-## Endpoints Overview
+```bash
+make restart
+```
 
-| Microservice            | Endpoint                                | Method  | Description                        |
-|------------------------|------------------------------------------|---------|------------------------------------|
-| `chatbot`              | `/chatbot/chat`                          | POST    | Ask Real Madrid facts              |
-| `match_commentary`     | `/commentary/{team_id}`                  | GET     | Live match events & commentary     |
-| `performance_prediction`| `/prediction/match`                     | POST    | Predict match result               |
-| `personalized_content` | `/recommendations/{user_id}`             | GET     | Get personalized articles          |
+## API Endpoints
 
----
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/chat` | Agent chatbot — processes message, may call tools |
+| `POST` | `/predict` | Match prediction — W/D/L probabilities |
+| `GET` | `/commentary` | Live match events + commentary (`?team_id=541`) |
+| `GET` | `/articles` | List articles (`?category=` `?limit=` filters) |
+| `POST` | `/articles/fetch` | Trigger RSS fetch manually |
+| `GET` | `/recommendations/{user_id}` | Personalized article list |
+| `GET` | `/health` | Backend health check (DB + Ollama) |
+| `GET` | `/docs` | Swagger UI |
 
-## Coming Soon
+## Project Structure
 
-### Neural Network Training (PyTorch)
+```
+├── app/                   # FastAPI backend
+│   ├── main.py            # App entrypoint + lifespan
+│   ├── config.py          # Pydantic Settings
+│   ├── database.py        # SQLAlchemy setup
+│   ├── models.py          # ORM models
+│   ├── chatbot/           # Agent + LLM provider
+│   ├── prediction/        # XGBoost model serving
+│   ├── commentary/        # API-Football + commentary
+│   └── content/           # RSS + recommendations
+├── pipeline/              # Offline data pipeline
+├── frontend/              # Vite + React SPA
+├── migrations/            # Alembic DB migrations
+├── models/                # Trained model artifacts
+├── data/                  # Raw + processed data
+├── tests/                 # pytest test suite
+├── docker-compose.yml     # PostgreSQL + Ollama + app
+├── Dockerfile             # Multi-stage, non-root
+├── Makefile               # Dev workflow commands
+└── pyproject.toml         # Python dependencies
+```
 
-- Train a **DNN with PyTorch** using SageMaker (Done)
-- Compare with RandomForest for accuracy & latency  (Done)
+## Available Make Targets
 
----
+```bash
+make help          # Show all targets
+make setup         # First-time setup
+make dev           # Local dev (hot reload)
+make dev-all       # Full Docker stack
+make dev-frontend  # Frontend dev server
+make db-migrate    # Run Alembic migrations
+make db-reset      # Reset database
+make pipeline      # Full data pipeline
+make test          # Run tests
+make lint          # Lint + format check
+make clean         # Stop containers + remove volumes
+```
 
-## Done So Far
+## Documentation
 
-Chatbot end-to-end  
-Match commentary + API-Football integration  
-ML model training + SageMaker deployment  
-CloudWatch dashboards & alerts  
-Dockerized microservices, Makefiles, Terraform infra  
-DynamoDB for content & user data  
+- [System Design](docs/SYSTEM_DESIGN.md) — architecture diagrams, data models, security
+- [Development Plan](docs/DEVELOPMENT_PLAN.md) — phased roadmap with deliverables
+
+## License
+
+MIT

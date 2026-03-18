@@ -1,1 +1,0 @@
-from sagemaker_serving import model_fn, input_fn, predict_fn, output_fn

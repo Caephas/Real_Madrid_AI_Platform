@@ -1,0 +1,68 @@
+# ============================================
+# Real Madrid AI Platform — Docker Compose
+# ============================================
+# Usage:
+#   docker compose up -d           Start all services
+#   docker compose up -d db ollama Start infra only (for local dev with uvicorn)
+#   docker compose logs -f app     Tail app logs
+#   docker compose down -v         Stop + remove volumes
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rm-postgres
+    environment:
+      POSTGRES_DB: real_madrid
+      POSTGRES_USER: rmadmin
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rmadmin -d real_madrid"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rm-ollama
+    volumes:
+      - ollama_models:/root/.ollama
+    ports:
+      - "11434:11434"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rm-backend
+    environment:
+      DATABASE_URL: postgresql://rmadmin:${DB_PASSWORD}@db:5432/real_madrid
+      LLM_PROVIDER: ${LLM_PROVIDER}
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      API_FOOTBALL_KEY: ${API_FOOTBALL_KEY}
+      API_FOOTBALL_BASE_URL: ${API_FOOTBALL_BASE_URL}
+      MODEL_DIR: /app/models
+    volumes:
+      - ./models:/app/models:ro
+      - ./data:/app/data:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  ollama_models:

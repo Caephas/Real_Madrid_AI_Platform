@@ -1,0 +1,117 @@
+# File: tests/test_prediction.py
+"""Unit tests for the prediction module."""
+
+import json
+import os
+from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pytest
+
+from app.prediction.mappings import (
+    get_opponent_code,
+    get_venue_code,
+    get_known_opponents,
+    load_mappings,
+    _opponent_mapping,
+)
+from app.prediction.features import build_feature_vector, ROLLING_COLS
+from app.prediction.model import load_model, get_model
+
+
+# --- Mapping tests ---
+
+
+@pytest.fixture(autouse=True)
+def mock_mappings(tmp_path):
+    """Populate mapping globals for each test."""
+    import app.prediction.mappings as m
+
+    m._opponent_mapping = {"Barcelona": 4, "Sevilla": 23}
+    m._venue_mapping = {"Away": 0, "Home": 1}
+    yield
+    m._opponent_mapping = None
+    m._venue_mapping = None
+
+
+def test_get_opponent_code_valid():
+    assert get_opponent_code("Barcelona") == 4
+
+
+def test_get_opponent_code_invalid():
+    with pytest.raises(ValueError, match="Unknown opponent"):
+        get_opponent_code("Manchester United")
+
+
+def test_get_venue_code_home():
+    assert get_venue_code("Home") == 1
+
+
+def test_get_venue_code_case_insensitive():
+    assert get_venue_code("away") == 0
+
+
+def test_get_venue_code_invalid():
+    with pytest.raises(ValueError, match="Must be 'Home' or 'Away'"):
+        get_venue_code("Neutral")
+
+
+def test_get_known_opponents():
+    opps = get_known_opponents()
+    assert opps == ["Barcelona", "Sevilla"]
+
+
+# --- Feature builder tests ---
+
+
+def test_build_feature_vector(db_session):
+    """Feature vector has correct shape when team_stats exist."""
+    from app.models import TeamStats
+
+    # Seed team_stats
+    db_session.add(TeamStats(
+        team_name="Real Madrid",
+        gf_rolling=2.0, ga_rolling=0.8, sh_rolling=15.0, sot_rolling=5.0,
+        dist_rolling=18.0, fk_rolling=0.5, pk_rolling=0.1, pkatt_rolling=0.1,
+    ))
+    db_session.add(TeamStats(
+        team_name="Barcelona",
+        gf_rolling=1.8, ga_rolling=1.0, sh_rolling=14.0, sot_rolling=4.5,
+        dist_rolling=19.0, fk_rolling=0.3, pk_rolling=0.0, pkatt_rolling=0.0,
+    ))
+    db_session.commit()
+
+    features = build_feature_vector("Barcelona", "Home", "2025-04-13", db_session)
+    assert features.shape == (1, 20)
+    assert features["venue_code"].iloc[0] == 1  # Home
+    assert features["opp_code"].iloc[0] == 4  # Barcelona
+
+
+def test_build_feature_vector_unknown_team(db_session):
+    """Missing team_stats for the opponent should raise ValueError."""
+    # No team_stats seeded in this test — db is clean
+    from app.models import TeamStats
+    assert db_session.get(TeamStats, "Barcelona") is None
+    with pytest.raises(ValueError, match="No rolling stats found"):
+        build_feature_vector("Barcelona", "Home", "2025-04-13", db_session)
+
+
+# --- Model tests ---
+
+
+def test_get_model_not_loaded():
+    """get_model raises if load_model hasn't been called."""
+    import app.prediction.model as m
+
+    original = m._model
+    m._model = None
+    with pytest.raises(RuntimeError, match="not loaded"):
+        get_model()
+    m._model = original
+
+
+def test_load_model_missing_file():
+    with patch("app.prediction.model.settings") as mock_settings:
+        mock_settings.model_dir = "/nonexistent"
+        with pytest.raises(FileNotFoundError):
+            load_model()

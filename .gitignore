@@ -1,24 +1,46 @@
-.env
+# Real Madrid AI Platform
+
+# Python
 __pycache__/
-.pytest_cache/
-*.log
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.venv/
+venv/
+
+# Models (trained artifacts — large files)
+models/*.pkl
+models/*.json
+
+# Data (raw/processed CSVs — potentially large)
+data/raw/
+data/processed/
+
+# IDE
 .idea/
-poetry.lock
+.vscode/
+*.swp
+*.swo
+
+# OS
 .DS_Store
-.vscode
+Thumbs.db
 
-# Terraform state and plan files (inside infra/)
-infra/**/.terraform/
-infra/**/*.tfstate
-infra/**/*.tfstate.*
-infra/**/*.tfvars
-infra/**/*.tfplan
-infra/**/.terraform.lock.hcl
+# Docker
+pgdata/
 
-# Catch any top-level ones
-*.tfstate
-*.tfstate.*
-*.tfvars
-*.tfplan
-.terraform/
-.terraform.lock.hcl
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Alembic
+migrations/versions/__pycache__/
+
+# Misc
+*.log
+.coverage
+htmlcov/

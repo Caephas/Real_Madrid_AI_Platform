@@ -64,17 +64,18 @@ def tool_get_commentary(args: dict, db: Session) -> str:
 
 def tool_get_articles(args: dict, db: Session) -> str:
     """Fetch latest news articles."""
-    category = args.get("category")
     limit = min(args.get("limit", 5), 10)
 
-    articles = get_articles(db, category=category, limit=limit)
+    articles = get_articles(db, limit=limit)
     if not articles:
-        return "No articles found."
+        return "No articles found in the database."
 
     lines = []
     for a in articles:
         lines.append(f"[{a.category}] {a.title}")
-        lines.append(f"  {a.link}")
+        if a.content:
+            lines.append(f"  Summary: {a.content[:150]}")
+        lines.append(f"  Published: {a.published}")
     return "\n".join(lines)
 
 

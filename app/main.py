@@ -42,17 +42,29 @@ async def lifespan(app: FastAPI):
     except FileNotFoundError as e:
         logger.warning("Model/mappings not found: %s. /predict will fail until `make pipeline` is run.", e)
 
-    # Start APScheduler for periodic RSS fetch
+    # Start APScheduler for periodic tasks
     from datetime import datetime
     from apscheduler.schedulers.background import BackgroundScheduler
+
+    def _refresh_stats_job():
+        """Background job: refresh team_stats if stale."""
+        try:
+            from pipeline.refresh_stats import refresh
+            refresh(force=False)
+        except Exception as e:
+            logger.warning("Stats refresh failed (non-fatal): %s", e)
 
     scheduler = BackgroundScheduler()
     scheduler.add_job(
         fetch_and_store_articles, "interval", hours=6, id="rss_fetch",
         next_run_time=datetime.now(),  # run immediately on startup
     )
+    scheduler.add_job(
+        _refresh_stats_job, "interval", hours=24, id="stats_refresh",
+        next_run_time=datetime.now(),  # check staleness on startup
+    )
     scheduler.start()
-    logger.info("APScheduler started: RSS fetch every 6 hours")
+    logger.info("APScheduler started: RSS fetch every 6h, stats refresh every 24h")
 
     yield
 

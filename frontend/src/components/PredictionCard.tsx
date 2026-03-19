@@ -25,7 +25,7 @@ export function PredictionCard({ opponent, venue, date, win, draw, loss, classNa
 
       <div className="text-center space-y-1">
         <p className="text-sm text-muted-foreground uppercase tracking-wider">
-          {venue === 'home' ? 'Home' : 'Away'}
+          {venue.toLowerCase() === 'home' ? 'Home' : 'Away'}
         </p>
         <p className="text-xl font-bold">
           Real Madrid <span className="text-muted-foreground mx-2">vs</span> {opponent}

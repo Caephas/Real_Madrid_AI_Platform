@@ -12,7 +12,14 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
     proxy: {
-      '/chat': 'http://localhost:8000',
+      '/chat': {
+        target: 'http://localhost:8000',
+        bypass(req) {
+          // Browser navigation sends GET with text/html — let Vite serve the SPA
+          if (req.headers.accept?.includes('text/html')) return req.url;
+        },
+      },
+      '/predict/analysis': 'http://localhost:8000',
       '/predict': 'http://localhost:8000',
       '/commentary': 'http://localhost:8000',
       '/articles': 'http://localhost:8000',

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, Article } from '@/api/client';
 import { useApi } from '@/hooks/useApi';
 import { PredictionCard } from '@/components/PredictionCard';
+import { MatchAnalysis } from '@/components/MatchAnalysis';
 import { ArticleReader } from '@/components/ArticleReader';
 import { CardSkeleton } from '@/components/LoadingSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
@@ -102,6 +103,15 @@ export default function Dashboard() {
           <div className="glass-card p-6 text-center text-muted-foreground">
             No upcoming fixtures
           </div>
+        )}
+
+        {/* Match Analysis */}
+        {prediction && nextMatch && (
+          <MatchAnalysis
+            opponent={nextMatch.opponent}
+            venue={nextMatch.venue}
+            date={nextMatch.date}
+          />
         )}
 
         {/* Live Match Status */}

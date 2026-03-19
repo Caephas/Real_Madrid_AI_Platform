@@ -18,29 +18,65 @@ SYSTEM_PROMPT = """You are Hala Bot, an AI assistant for Real Madrid fans. You h
 Rules:
 - ALWAYS respond in English, regardless of the topic
 - You ONLY discuss Real Madrid and La Liga football topics
-- Use tools to get real data before answering factual questions
-- Be concise and enthusiastic about Real Madrid
+- You MUST use tools to get real data before answering factual questions — do NOT make up facts
+- Be concise and informative about Real Madrid
 - If asked about non-football topics, politely redirect to Real Madrid
 
-Available tools:
-- predict_match: Predict the outcome of a Real Madrid match (pass opponent, venue, date)
-- get_commentary: Get live match commentary for Real Madrid
-- get_articles: Get latest Real Madrid news articles (optional category filter)
+IMPORTANT: When the user asks about news, predictions, or live matches, you MUST call the appropriate tool FIRST. Never answer from your own knowledge for factual Real Madrid questions."""
 
-When you need to call a tool, respond with a JSON object:
-{"tool": "<tool_name>", "args": {<arguments>}}
-
-When you have enough information to answer the user, respond with plain text (no JSON).
-"""
+# Ollama native tool definitions for structured tool calling
+OLLAMA_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "predict_match",
+            "description": "Predict the outcome of a Real Madrid La Liga match. Returns win/draw/loss probabilities.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "opponent": {"type": "string", "description": "Opponent team name, e.g. 'Barcelona'"},
+                    "venue": {"type": "string", "description": "'Home' or 'Away'", "enum": ["Home", "Away"]},
+                    "date": {"type": "string", "description": "Match date in YYYY-MM-DD format"},
+                },
+                "required": ["opponent", "venue", "date"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_commentary",
+            "description": "Get live match commentary and score for any current Real Madrid match.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_articles",
+            "description": "Get the latest Real Madrid news articles. Call this for ANY question about news, transfers, injuries, or recent events. Call with no arguments to get all latest news.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "limit": {"type": "integer", "description": "Number of articles to fetch (default 5, max 10)"},
+                },
+                "required": [],
+            },
+        },
+    },
+]
 
 
 class LLMProvider(ABC):
     """Interface for LLM providers."""
 
     @abstractmethod
-    def generate(self, messages: list[dict[str, str]]) -> str:
+    def generate(self, messages: list[dict[str, str]], tools: list | None = None) -> str:
         """Generate a response given a conversation history. Returns raw text."""
-        ...
 
 
 class OllamaProvider(LLMProvider):
@@ -50,17 +86,30 @@ class OllamaProvider(LLMProvider):
         self.base_url = settings.ollama_base_url
         self.model = settings.ollama_model
 
-    def generate(self, messages: list[dict[str, str]]) -> str:
+    def generate(self, messages: list[dict[str, str]], tools: list | None = None) -> str:
         url = f"{self.base_url}/api/chat"
         payload = {
             "model": self.model,
             "messages": messages,
             "stream": False,
+            "options": {"num_predict": 512},
+            "think": False,
         }
+        if tools:
+            payload["tools"] = tools
         try:
             resp = httpx.post(url, json=payload, timeout=120)
             resp.raise_for_status()
-            return resp.json()["message"]["content"]
+            data = resp.json()
+            msg = data.get("message", {})
+
+            # Check for native tool calls in the response
+            if msg.get("tool_calls"):
+                # Return as JSON for the agent loop to parse
+                import json
+                return json.dumps({"tool_calls": msg["tool_calls"]})
+
+            return msg.get("content", "")
         except httpx.HTTPError as e:
             logger.error("Ollama request failed: %s", e)
             raise RuntimeError(f"Ollama unavailable: {e}") from e
@@ -70,25 +119,22 @@ class GeminiProvider(LLMProvider):
     """Google Gemini cloud LLM. Optional fallback."""
 
     def __init__(self):
-        import google.generativeai as genai
-
-        if not settings.gemini_api_key:
+        self.api_key = settings.gemini_api_key
+        if not self.api_key:
             raise ValueError("GEMINI_API_KEY not set")
-        genai.configure(api_key=settings.gemini_api_key)
-        self.model = genai.GenerativeModel("gemini-2.0-flash")
 
-    def generate(self, messages: list[dict[str, str]]) -> str:
-        # Convert chat format to Gemini format
-        history = []
-        for msg in messages:
-            role = "user" if msg["role"] == "user" else "model"
-            history.append({"role": role, "parts": [msg["content"]]})
+    def generate(self, messages: list[dict[str, str]], tools: list | None = None) -> str:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.api_key}"
+        contents = []
+        for m in messages:
+            role = "user" if m["role"] in ("user", "system") else "model"
+            contents.append({"role": role, "parts": [{"text": m["content"]}]})
 
         try:
-            chat = self.model.start_chat(history=history[:-1])
-            response = chat.send_message(history[-1]["parts"][0])
-            return response.text
-        except Exception as e:
+            resp = httpx.post(url, json={"contents": contents}, timeout=30)
+            resp.raise_for_status()
+            return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+        except httpx.HTTPError as e:
             logger.error("Gemini request failed: %s", e)
             raise RuntimeError(f"Gemini unavailable: {e}") from e
 

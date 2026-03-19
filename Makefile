@@ -2,7 +2,7 @@
 # Real Madrid AI Platform — Makefile
 # ============================================
 
-.PHONY: setup dev test pipeline lint clean help
+.PHONY: setup dev test pipeline lint clean help refresh
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -22,6 +22,11 @@ setup: ## First-time setup: start containers, pull LLM model
 start: ## Start everything: db + backend + frontend (single command)
 	docker compose up -d db
 	@echo "PostgreSQL ready on :5433"
+	@echo "Checking if team_stats need refresh..."
+	@python3 -m pipeline.refresh_stats --check-only 2>/dev/null && \
+		echo "Stats are stale — refreshing in background..." && \
+		python3 -m pipeline.refresh_stats & \
+	|| echo "Stats are fresh, skipping refresh"
 	uvicorn app.main:app --reload --port 8000 &
 	@sleep 2
 	cd frontend && npm run dev
@@ -60,6 +65,9 @@ pipeline: ## Run the full data pipeline: scrape → clean → train → update s
 
 pipeline-train: ## Train model only (assumes cleaned data exists)
 	python3 -m pipeline.train --input data/processed/ --output models/
+
+refresh: ## Refresh team_stats: scrape current season from fbref, update rolling averages
+	python3 -m pipeline.refresh_stats --force
 
 # ---------- Quality ----------
 

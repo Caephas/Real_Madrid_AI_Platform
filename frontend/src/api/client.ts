@@ -23,6 +23,23 @@ export interface NextFixture {
   competition: string;
 }
 
+export interface TeamForm {
+  team: string;
+  goals_scored: number;
+  goals_conceded: number;
+  shots: number;
+  shots_on_target: number;
+  shot_distance: number;
+}
+
+export interface MatchAnalysis {
+  prediction: PredictionResult;
+  real_madrid_form: TeamForm;
+  opponent_form: TeamForm;
+  key_factors: string[];
+  ai_narrative: string;
+}
+
 export interface ChatResponse {
   response: string;
 }
@@ -124,4 +141,10 @@ export const api = {
   getHealth: () => request<{ status: string; db: string; ollama: string }>('/health'),
 
   getNextFixture: () => request<NextFixture | null>('/next-fixture'),
+
+  predictWithAnalysis: (opponent: string, venue: string, date: string) =>
+    request<MatchAnalysis>('/predict/analysis', {
+      method: 'POST',
+      body: JSON.stringify({ opponent, venue, date }),
+    }),
 };

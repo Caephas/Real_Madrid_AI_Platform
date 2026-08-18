@@ -28,7 +28,8 @@ flowchart LR
 
 **Actors**
 
-- **Fan** — uses the SPA for predictions, chat, live commentary, news.
+- **Fan** — uses the SPA for news, predictions, fixtures, standings, history,
+  and live commentary; chat is a companion assistant.
 - **Operator** — runs the offline pipeline (`make pipeline`), monitors
   `GET /health`, retrains as seasons complete.
 
@@ -333,6 +334,7 @@ docker compose up --build
 
 - Full API-Football season mapping in `fetch_season.py` (when a season is
   covered there) for real xG/possession on every pulled season.
-- Model calibration (temperature scaling) for sharper W/D/L probabilities.
-- User auth + per-user chat history isolation.
-- Historical fixtures/results page (season standings table).
+- Probability calibration is evaluated at every retrain and auto-deployed only
+  when it improves log loss (current data favors uncalibrated outputs).
+- Live match hub page combining prediction + commentary + post-match report.
+- News: per-article AI summaries and an article archive with full-text search.

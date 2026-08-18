@@ -183,3 +183,21 @@ def test_chat_stream_reports_tool_events(client, db_session, monkeypatch):
     assert '"type": "tool"' in resp.text
     assert '"name": "get_articles"' in resp.text
     assert "Here's the news." in resp.text
+
+
+def test_conversations_are_scoped_per_user(client, db_session, monkeypatch):
+    """User A cannot see user B's conversations."""
+    _mock_llm_provider(monkeypatch)
+
+    client.post("/chat", json={"message": "hello", "user_id": "user-a"})
+    client.post("/chat", json={"message": "hola", "user_id": "user-b"})
+
+    a = client.get("/conversations?user_id=user-a").json()
+    b = client.get("/conversations?user_id=user-b").json()
+    assert len(a["conversations"]) == 1
+    assert len(b["conversations"]) == 1
+    assert a["conversations"][0]["conversation_id"] != b["conversations"][0]["conversation_id"]
+
+    # An unfiltered listing returns every conversation (both users)
+    all_convs = client.get("/conversations").json()
+    assert len(all_convs["conversations"]) == 2

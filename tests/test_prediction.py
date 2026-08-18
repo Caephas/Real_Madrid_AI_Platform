@@ -11,6 +11,7 @@ from app.prediction.mappings import (
     get_known_opponents,
 )
 from app.prediction.features import ROLLING_COLS, build_feature_vector
+from app.prediction.features import compute_insights
 from app.prediction.model import load_model, get_model
 
 
@@ -143,6 +144,26 @@ def test_get_model_not_loaded():
     with pytest.raises(RuntimeError, match="not loaded"):
         get_model()
     m._model = original
+
+
+def test_compute_insights_highlights_extreme_features():
+    """Z-score insights flag features far from the training distribution."""
+    import app.prediction.features as f
+
+    original = f._feature_stats
+    f._feature_stats = {
+        "mean": {c: 50.0 for c in ROLLING_COLS + [f"opp_{c}" for c in ROLLING_COLS]},
+        "std": {c: 1.0 for c in ROLLING_COLS + [f"opp_{c}" for c in ROLLING_COLS]},
+    }
+    features = {c: 50.0 for c in ROLLING_COLS + [f"opp_{c}" for c in ROLLING_COLS]}
+    features["gf_rolling"] = 56.0  # 6σ above
+    features["opp_ga_rolling"] = 47.0  # 3σ below
+
+    insights = compute_insights(features, "Barcelona", "Away")
+    assert any("scoring form" in i and "above" in i for i in insights)
+    assert any("defensive form" in i and "below" in i for i in insights)
+    assert insights[0] == "Away fixture — historically tougher"
+    f._feature_stats = original
 
 
 def test_load_model_missing_file():

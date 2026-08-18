@@ -6,6 +6,7 @@ import { ArticleCard } from '@/components/ArticleCard';
 import { ArticleReader } from '@/components/ArticleReader';
 import { CardSkeleton } from '@/components/LoadingSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import RecommendationCard, { ArticleRecommendation } from '@/components/ai/RecommendationCard';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
@@ -50,15 +51,32 @@ export default function News() {
           {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
       ) : data?.length ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {data.map((article) => (
-            <ArticleCard
-              key={article.article_id}
-              article={article}
-              onClick={() => setSelectedArticle(article)}
+        <>
+          {/* Featured article — AI recommendation style */}
+          <div className="flex justify-center">
+            <RecommendationCard
+              article={
+                {
+                  title: data[0].title,
+                  category: data[0].category,
+                  body: data[0].content ?? '',
+                  link: data[0].link,
+                  published: data[0].published,
+                } as ArticleRecommendation
+              }
+              onRead={() => setSelectedArticle(data[0])}
             />
-          ))}
-        </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.slice(1).map((article) => (
+              <ArticleCard
+                key={article.article_id}
+                article={article}
+                onClick={() => setSelectedArticle(article)}
+              />
+            ))}
+          </div>
+        </>
       ) : (
         <div className="glass-card p-10 text-center">
           <p className="text-muted-foreground">No articles found in this category</p>

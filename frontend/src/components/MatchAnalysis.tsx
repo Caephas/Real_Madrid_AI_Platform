@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { api, MatchAnalysis as MatchAnalysisData } from '@/api/client';
 import { Brain, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp } from 'lucide-react';
+import LoadingState from '@/components/ai/LoadingState';
 
 interface Props {
   opponent: string;
@@ -48,14 +49,11 @@ export function MatchAnalysis({ opponent, venue, date }: Props) {
 
   if (loading) {
     return (
-      <div className="glass-card p-6 animate-pulse space-y-3">
-        <div className="flex items-center gap-2">
-          <Brain className="w-4 h-4 text-primary animate-spin" />
-          <span className="text-sm text-muted-foreground">Generating match analysis...</span>
+      <div className="glass-card p-8">
+        <div className="flex items-start gap-3">
+          <Brain className="w-4 h-4 text-primary mt-0.5" />
+          <LoadingState label="Generating tactical analysis" variant="Dots" />
         </div>
-        <div className="h-3 bg-muted/30 rounded w-3/4" />
-        <div className="h-3 bg-muted/30 rounded w-1/2" />
-        <div className="h-3 bg-muted/30 rounded w-2/3" />
       </div>
     );
   }

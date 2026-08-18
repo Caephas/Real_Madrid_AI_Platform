@@ -27,6 +27,7 @@ from datetime import datetime
 
 import joblib
 import pandas as pd
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, log_loss
 from sklearn.model_selection import cross_val_score
@@ -148,11 +149,49 @@ def train(input_dir: str, output_dir: str) -> None:
     print(f"Accuracy: {rf_acc:.4f} | Log loss: {rf_ll:.4f}")
     print(classification_report(y_test, rf_preds, target_names=TARGET_NAMES, zero_division=0))
 
-    # --- Comparison (selection by log loss; accuracy as tiebreak) ---
+    # --- Probability calibration (Platt scaling on original train) ---
+    # SMOTE changes class priors, so the base model's probabilities are skewed.
+    # Calibrating on the *original* training labels restores honest probabilities
+    # without touching the held-out test set.
+    print("\n--- Calibration (Platt scaling, cv='prefit') ---")
+    calibrated: dict[str, CalibratedClassifierCV] = {}
+    cal_ll: dict[str, float] = {}
+    for name, model in (("xgboost", xgb_model), ("rf", rf_model)):
+        cal = CalibratedClassifierCV(estimator=model, method="sigmoid", cv="prefit")
+        cal.fit(X_train, y_train)
+        calibrated[name] = cal
+        cal_ll[name] = log_loss(y_test, cal.predict_proba(X_test))
+        print(
+            f"  {name}: uncalibrated log_loss={log_loss(y_test, model.predict_proba(X_test)):.4f} "
+            f"→ calibrated log_loss={cal_ll[name]:.4f}"
+        )
+
+    # --- Comparison (selection by calibrated log loss; accuracy as tiebreak) ---
     print("\n--- Comparison ---")
     print(f"  XGBoost:  accuracy={xgb_acc:.4f}  log_loss={xgb_ll:.4f}")
     print(f"  RF:       accuracy={rf_acc:.4f}  log_loss={rf_ll:.4f}")
-    best = "xgboost" if (xgb_ll, -xgb_acc) <= (rf_ll, -rf_acc) else "rf"
+
+    uncal_models = {"xgboost": xgb_model, "rf": rf_model}
+    uncal_ll = {"xgboost": xgb_ll, "rf": rf_ll}
+    deployed: dict[str, object] = {}
+    deployed_choice: dict[str, str] = {}
+    for name in ("xgboost", "rf"):
+        if cal_ll[name] < uncal_ll[name]:
+            deployed[name] = calibrated[name]
+            deployed_choice[name] = "calibrated"
+        else:
+            deployed[name] = uncal_models[name]
+            deployed_choice[name] = "uncalibrated"
+        print(
+            f"  {name}: deploying {deployed_choice[name]} "
+            f"(calibrated LL={cal_ll[name]:.4f} vs uncalibrated LL={uncal_ll[name]:.4f})"
+        )
+
+    def _deployed_score(name: str) -> tuple[float, float]:
+        probs = deployed[name].predict_proba(X_test)
+        return log_loss(y_test, probs), -accuracy_score(y_test, deployed[name].predict(X_test))
+
+    best = min(("xgboost", "rf"), key=_deployed_score)
     print(f"  Best: {best}")
 
     # 5-fold CV on the (resampled) training data — reported, not used for selection
@@ -179,8 +218,8 @@ def train(input_dir: str, output_dir: str) -> None:
 
     # Save models
     os.makedirs(output_dir, exist_ok=True)
-    joblib.dump(xgb_model, os.path.join(output_dir, "xgboost_model.pkl"))
-    joblib.dump(rf_model, os.path.join(output_dir, "rf_model.pkl"))
+    joblib.dump(deployed["xgboost"], os.path.join(output_dir, "xgboost_model.pkl"))
+    joblib.dump(deployed["rf"], os.path.join(output_dir, "rf_model.pkl"))
 
     # Copy mappings alongside models (inference needs them colocated)
     for mapping_file in ["opponent_mapping.json", "venue_mapping.json", "team_mapping.json"]:
@@ -199,10 +238,17 @@ def train(input_dir: str, output_dir: str) -> None:
         "data_date_range": metadata.get("data_date_range"),
         "test_seasons": metadata.get("test_season_values"),
         "best_model": best,
+        "calibration": {
+            "method": "sigmoid",
+            "deployed": deployed_choice,
+            "calibrated_log_loss": cal_ll,
+        },
+        "calibration_method": "sigmoid",
         "models": {
             "xgboost": {
                 "accuracy": round(xgb_acc, 4),
                 "log_loss": round(xgb_ll, 4),
+                "calibrated_log_loss": round(cal_ll["xgboost"], 4),
                 "cv_accuracy_mean": round(float(pd.Series(cv_scores["xgboost"]).mean()), 4),
                 "classification_report": classification_report(
                     y_test, xgb_preds, target_names=TARGET_NAMES, zero_division=0, output_dict=True
@@ -211,6 +257,7 @@ def train(input_dir: str, output_dir: str) -> None:
             "rf": {
                 "accuracy": round(rf_acc, 4),
                 "log_loss": round(rf_ll, 4),
+                "calibrated_log_loss": round(cal_ll["rf"], 4),
                 "cv_accuracy_mean": round(float(pd.Series(cv_scores["rf"]).mean()), 4),
                 "classification_report": classification_report(
                     y_test, rf_preds, target_names=TARGET_NAMES, zero_division=0, output_dict=True
@@ -224,8 +271,18 @@ def train(input_dir: str, output_dir: str) -> None:
     with open(os.path.join(output_dir, "feature_importance.json"), "w") as f:
         json.dump({name: float(imp) for name, imp in importances}, f, indent=2)
 
+    # Per-feature mean/std on the ORIGINAL training set — powers per-prediction
+    # explainability (z-score insights) at inference time.
+    feature_stats = {
+        "mean": {f: float(X_train[f].mean()) for f in features},
+        "std": {f: float(X_train[f].std(ddof=0)) for f in features},
+    }
+    with open(os.path.join(output_dir, "feature_stats.json"), "w") as f:
+        json.dump(feature_stats, f, indent=2)
+
     print(f"\nModels + metrics saved to {output_dir}")
-    print("  xgboost_model.pkl, rf_model.pkl, model_metrics.json, feature_importance.json")
+    print("  xgboost_model.pkl, rf_model.pkl, model_metrics.json,")
+    print("  feature_importance.json, feature_stats.json")
 
 
 if __name__ == "__main__":

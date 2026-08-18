@@ -2,18 +2,23 @@
 """Prediction endpoints: /predict, /predict/analysis, /opponents, /next-match, /fixtures."""
 
 import logging
+import time
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.prediction.features import build_feature_vector, _get_team_rolling
+from app.prediction.features import _get_team_rolling, build_feature_vector, compute_insights
 from app.prediction.mappings import get_known_opponents
 from app.prediction.model import get_model
 
 router = APIRouter()
 logger = logging.getLogger("app.prediction")
+
+# Deterministic LLM analysis is expensive (tokens + latency) — cache per fixture.
+_analysis_cache: dict = {}
+_ANALYSIS_CACHE_TTL_SECONDS = 6 * 60 * 60
 
 
 class PredictRequest(BaseModel):
@@ -26,6 +31,9 @@ class PredictResponse(BaseModel):
     win: float
     draw: float
     loss: float
+    insights: list[str] = Field(
+        default_factory=list, description="Why the model leans the way it does"
+    )
 
 
 class TeamForm(BaseModel):
@@ -88,12 +96,18 @@ def predict_match(req: PredictRequest, db: Session = Depends(get_db)):
         loss=round(float(probabilities[0]), 4),
         draw=round(float(probabilities[1]), 4),
         win=round(float(probabilities[2]), 4),
+        insights=compute_insights(features.iloc[0].to_dict(), req.opponent, req.venue),
     )
 
 
 @router.post("/predict/analysis", response_model=AnalysisResponse)
 def predict_with_analysis(req: PredictRequest, db: Session = Depends(get_db)):
     """Predict + generate AI-powered match analysis with team form comparison."""
+    cache_key = (req.opponent, req.venue, req.date)
+    cached = _analysis_cache.get(cache_key)
+    if cached and time.time() - cached[0] < _ANALYSIS_CACHE_TTL_SECONDS:
+        return cached[1]
+
     # Run prediction
     try:
         features = build_feature_vector(
@@ -111,6 +125,7 @@ def predict_with_analysis(req: PredictRequest, db: Session = Depends(get_db)):
         loss=round(float(probabilities[0]), 4),
         draw=round(float(probabilities[1]), 4),
         win=round(float(probabilities[2]), 4),
+        insights=compute_insights(features.iloc[0].to_dict(), req.opponent, req.venue),
     )
 
     # Get raw rolling stats for both teams
@@ -142,13 +157,15 @@ def predict_with_analysis(req: PredictRequest, db: Session = Depends(get_db)):
         prediction, rm_form, opp_form, key_factors, req.venue, req.date
     )
 
-    return AnalysisResponse(
+    response = AnalysisResponse(
         prediction=prediction,
         real_madrid_form=rm_form,
         opponent_form=opp_form,
         key_factors=key_factors,
         ai_narrative=ai_narrative,
     )
+    _analysis_cache[cache_key] = (time.time(), response)
+    return response
 
 
 def _derive_key_factors(rm: dict, opp: dict, opponent: str, venue: str) -> list[str]:
@@ -282,3 +299,55 @@ def recent_results(limit: int = Query(5, ge=1, le=10)):
     from app.fixtures import get_recent_results
 
     return {"results": get_recent_results(limit=limit)}
+
+
+@router.get("/standings", response_model=dict)
+def standings(season: int | None = Query(None, description="Season start year (default: latest)")):
+    """League table for a season: position, W/D/L, points, last-5 form."""
+    from app.history_data import available_seasons, get_standings
+
+    if season is None:
+        seasons = available_seasons()
+        season = seasons[-1] if seasons else None
+    return {
+        "season": season,
+        "available_seasons": available_seasons(),
+        "standings": get_standings(season) if season else [],
+    }
+
+
+@router.get("/form", response_model=dict)
+def team_form(
+    team: str = Query(..., description="Team name, e.g. 'Real Madrid'"),
+    season: int | None = Query(None),
+    limit: int = Query(5, ge=1, le=10),
+):
+    """Recent results for a team as W/D/L, most recent first."""
+    from app.history_data import get_form
+
+    return {"team": team, "form": get_form(team, season=season, limit=limit)}
+
+
+@router.get("/history", response_model=dict)
+def season_history(
+    season: int | None = Query(None, description="Season start year (default: latest)"),
+):
+    """Real Madrid's matches for a season."""
+    from app.history_data import available_seasons, get_history
+
+    if season is None:
+        seasons = available_seasons()
+        season = seasons[-1] if seasons else None
+    return {
+        "season": season,
+        "available_seasons": available_seasons(),
+        "matches": get_history(season) if season else [],
+    }
+
+
+@router.get("/h2h", response_model=dict)
+def head_to_head(opponent: str = Query(...)):
+    """Head-to-head record between Real Madrid and an opponent."""
+    from app.history_data import get_h2h
+
+    return get_h2h(opponent)

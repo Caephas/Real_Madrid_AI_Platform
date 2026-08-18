@@ -4,7 +4,7 @@ import json
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import desc
@@ -58,20 +58,40 @@ def _new_conversation_id() -> str:
     return str(uuid.uuid4())
 
 
-def _load_history(db: Session, conversation_id: str, limit: int = 8) -> list[dict[str, str]]:
+def _load_history(
+    db: Session,
+    conversation_id: str,
+    user_id: str | None = None,
+    limit: int = 8,
+) -> list[dict[str, str]]:
     """Recent messages for a conversation, oldest first."""
-    rows = (
+    query = (
         db.query(ChatMessage)
         .filter(ChatMessage.conversation_id == conversation_id)
         .order_by(desc(ChatMessage.created_at))
         .limit(limit)
-        .all()
     )
+    if user_id:
+        query = query.filter(ChatMessage.user_id == user_id)
+    rows = query.all()
     return [{"role": r.role, "content": r.content} for r in reversed(rows)]
 
 
-def _store_message(db: Session, conversation_id: str, role: str, content: str) -> None:
-    db.add(ChatMessage(conversation_id=conversation_id, role=role, content=content))
+def _store_message(
+    db: Session,
+    conversation_id: str,
+    role: str,
+    content: str,
+    user_id: str | None = None,
+) -> None:
+    db.add(
+        ChatMessage(
+            conversation_id=conversation_id,
+            user_id=user_id,
+            role=role,
+            content=content,
+        )
+    )
     db.commit()
 
 
@@ -83,7 +103,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     call internal tools (prediction, commentary, news) before answering.
     """
     conversation_id = req.conversation_id or _new_conversation_id()
-    history = _load_history(db, conversation_id) if req.conversation_id else []
+    history = _load_history(db, conversation_id, user_id=req.user_id) if req.conversation_id else []
 
     try:
         provider = _get_provider()
@@ -96,8 +116,8 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
 
-    _store_message(db, conversation_id, "user", req.message)
-    _store_message(db, conversation_id, "assistant", result)
+    _store_message(db, conversation_id, "user", req.message, user_id=req.user_id)
+    _store_message(db, conversation_id, "assistant", result, user_id=req.user_id)
     return ChatResponse(response=result, conversation_id=conversation_id)
 
 
@@ -113,7 +133,7 @@ def chat_stream(req: ChatRequest, db: Session = Depends(get_db)):
             | {"type":"done","conversation_id":...} | {"type":"error","message":...}
     """
     conversation_id = req.conversation_id or _new_conversation_id()
-    history = _load_history(db, conversation_id) if req.conversation_id else []
+    history = _load_history(db, conversation_id, user_id=req.user_id) if req.conversation_id else []
 
     def event_stream():
         collected: list[str] = []
@@ -131,8 +151,10 @@ def chat_stream(req: ChatRequest, db: Session = Depends(get_db)):
             yield _sse({"type": "done", "conversation_id": conversation_id})
 
             # Persist once the stream completes
-            _store_message(db, conversation_id, "user", req.message)
-            _store_message(db, conversation_id, "assistant", "".join(collected))
+            _store_message(db, conversation_id, "user", req.message, user_id=req.user_id)
+            _store_message(
+                db, conversation_id, "assistant", "".join(collected), user_id=req.user_id
+            )
         except RuntimeError as e:
             yield _sse({"type": "error", "message": str(e)})
         except Exception as e:  # never leave the client hanging
@@ -170,3 +192,55 @@ def conversation_history(conversation_id: str, db: Session = Depends(get_db)):
             for r in rows
         ],
     )
+
+
+class ConversationSummary(BaseModel):
+    conversation_id: str
+    last_message: str
+    message_count: int
+    updated_at: str | None = None
+
+
+class ConversationsResponse(BaseModel):
+    user_id: str | None
+    conversations: list[ConversationSummary]
+
+
+@router.get("/conversations", response_model=ConversationsResponse)
+def list_conversations(
+    user_id: str | None = Query(None, description="Scope to a user (device id)"),
+    db: Session = Depends(get_db),
+):
+    """List conversations (optionally for one user), newest first."""
+    from sqlalchemy import func
+
+    query = (
+        db.query(
+            ChatMessage.conversation_id,
+            func.max(ChatMessage.created_at).label("updated_at"),
+            func.count(ChatMessage.id).label("message_count"),
+        )
+        .group_by(ChatMessage.conversation_id)
+        .order_by(desc(func.max(ChatMessage.created_at)))
+    )
+    if user_id:
+        query = query.filter(ChatMessage.user_id == user_id)
+
+    summaries = []
+    for conversation_id, updated_at, message_count in query.all():
+        last = (
+            db.query(ChatMessage.content)
+            .filter(ChatMessage.conversation_id == conversation_id)
+            .order_by(desc(ChatMessage.created_at))
+            .first()
+        )
+        summaries.append(
+            ConversationSummary(
+                conversation_id=conversation_id,
+                last_message=(last[0] if last else "")[:120],
+                message_count=int(message_count),
+                updated_at=updated_at.isoformat() if updated_at else None,
+            )
+        )
+
+    return ConversationsResponse(user_id=user_id, conversations=summaries)

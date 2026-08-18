@@ -14,11 +14,14 @@ Rolling stats are 5-game averages (closed left — no target leakage):
 """
 
 from datetime import datetime
+import json
 import logging
+from pathlib import Path
 
 import pandas as pd
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.models import TeamStats
 from app.prediction.mappings import get_opponent_code, get_venue_code
 
@@ -39,6 +42,75 @@ TEAM_NAME_ALIASES: dict[str, str] = {
     "Málaga": "Malaga",
     "Deportivo La Coruña": "Deportivo La Coruna",
 }
+
+_feature_stats: dict | None = None
+
+INSIGHT_LABELS = {
+    "gf_rolling": "Real Madrid's scoring form",
+    "ga_rolling": "Real Madrid's defensive form",
+    "sh_rolling": "Real Madrid's shot volume",
+    "sot_rolling": "Real Madrid's shots on target",
+    "xg_rolling": "Real Madrid's xG form",
+    "xga_rolling": "Real Madrid's xGA form",
+    "poss_rolling": "Real Madrid's possession share",
+    "opp_gf_rolling": "{opp}'s scoring form",
+    "opp_ga_rolling": "{opp}'s defensive form",
+    "opp_sh_rolling": "{opp}'s shot volume",
+    "opp_sot_rolling": "{opp}'s shots on target",
+    "opp_xg_rolling": "{opp}'s xG form",
+    "opp_xga_rolling": "{opp}'s xGA form",
+    "opp_poss_rolling": "{opp}'s possession share",
+}
+
+
+def load_feature_stats() -> None:
+    """Load per-feature mean/std from training (for per-prediction insights)."""
+    global _feature_stats
+    path = Path(settings.model_dir) / "feature_stats.json"
+    if not path.exists():
+        _feature_stats = None
+        return
+    with open(path) as f:
+        _feature_stats = json.load(f)
+
+
+def compute_insights(
+    features: dict[str, float],
+    opponent: str,
+    venue: str,
+    top_k: int = 3,
+    z_threshold: float = 1.2,
+) -> list[str]:
+    """Explain a prediction via z-scores vs the training distribution.
+
+    Picks the rolling features that deviate most from the league-average match
+    and phrases them as readable insights (no SHAP dependency needed).
+    """
+    if _feature_stats is None:
+        return []
+
+    candidates: list[tuple[float, str]] = []
+    for col in ROLLING_COLS + OPP_ROLLING_COLS:
+        mean = _feature_stats["mean"].get(col)
+        std = _feature_stats["std"].get(col)
+        if mean is None or not std:
+            continue
+        z = (features[col] - mean) / std
+        if abs(z) >= z_threshold:
+            label = INSIGHT_LABELS.get(col, col).format(opp=opponent)
+            direction = "above" if z > 0 else "below"
+            candidates.append((abs(z), f"{label} is {abs(z):.1f}σ {direction} league average"))
+
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    insights = [
+        (
+            "Home advantage at the Bernabéu"
+            if venue.lower() == "home"
+            else "Away fixture — historically tougher"
+        )
+    ]
+    insights.extend(text for _, text in candidates[:top_k])
+    return insights
 
 
 def normalize_team_name(name: str) -> str:

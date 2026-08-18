@@ -8,6 +8,7 @@ import { CardSkeleton } from "@/components/LoadingSkeleton";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Fixtures = lazy(() => import("./pages/Fixtures"));
+const History = lazy(() => import("./pages/History"));
 const Chat = lazy(() => import("./pages/Chat"));
 const LiveMatch = lazy(() => import("./pages/LiveMatch"));
 const News = lazy(() => import("./pages/News"));
@@ -36,6 +37,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/fixtures" element={<Fixtures />} />
+                <Route path="/history" element={<History />} />
                 <Route path="/chat" element={<Chat />} />
                 <Route path="/live" element={<LiveMatch />} />
                 <Route path="/news" element={<News />} />

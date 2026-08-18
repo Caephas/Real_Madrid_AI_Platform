@@ -33,6 +33,15 @@ export function ChatMessage({ message }: ChatMessageProps) {
           ? 'bg-secondary text-secondary-foreground rounded-br-sm border border-primary/20'
           : 'glass-card-static text-foreground rounded-bl-sm'
       )}>
+        {message.content === '' && message.tools_used && message.tools_used.length > 0 && (
+          <div className="flex items-center gap-2 pb-2">
+            <span className="relative flex h-2 w-2">
+              <span className="live-pulse absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+            </span>
+            <span className="text-xs text-muted-foreground">Working with tools…</span>
+          </div>
+        )}
         <div className="prose prose-invert prose-sm max-w-none [&_p]:mb-2 [&_p:last-child]:mb-0 [&_code]:font-mono [&_code]:text-primary [&_code]:bg-muted/50 [&_code]:px-1 [&_code]:rounded">
           <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>

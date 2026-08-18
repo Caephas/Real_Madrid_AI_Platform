@@ -64,6 +64,16 @@ services:
       db:
         condition: service_healthy
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rm-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - app
+
 volumes:
   pgdata:
   ollama_models:

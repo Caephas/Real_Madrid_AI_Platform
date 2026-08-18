@@ -6,7 +6,7 @@
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
-from app.commentary.api_football import get_live_events, get_next_fixture
+from app.commentary.api_football import get_live_events_async, get_next_fixture
 from app.commentary.generator import generate_match_summary
 
 router = APIRouter()
@@ -43,7 +43,7 @@ class NextFixtureResponse(BaseModel):
 
 
 @router.get("/commentary", response_model=CommentaryResponse)
-def live_commentary(
+async def live_commentary(
     team_id: int = Query(default=None, description="Team ID (defaults to Real Madrid)"),
 ):
     """Fetch live match events and generate commentary.
@@ -51,7 +51,7 @@ def live_commentary(
     Returns fixture info + commentary text for each event.
     If no live match found, returns empty commentary list.
     """
-    events = get_live_events(team_id)
+    events = await get_live_events_async(team_id)
 
     if not events:
         return CommentaryResponse(fixture=None, commentary=[], event_count=0)

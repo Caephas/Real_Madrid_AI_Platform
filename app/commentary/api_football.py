@@ -54,6 +54,39 @@ def get_live_events(team_id: int | None = None) -> list[dict]:
         return []
 
     match = matches[0]
+    return _parse_live_match(match)
+
+
+async def get_live_events_async(team_id: int | None = None) -> list[dict]:
+    """Async variant of get_live_events — doesn't hold a worker thread."""
+    tid = team_id or settings.real_madrid_team_id
+    if not settings.api_football_key:
+        logger.warning("API_FOOTBALL_KEY not set; returning empty events")
+        return []
+
+    url = f"{settings.api_football_base_url}fixtures"
+    params = {"live": "all"}
+    async with httpx.AsyncClient(timeout=10) as client:
+        try:
+            resp = await client.get(url, headers=_headers(), params=params)
+            resp.raise_for_status()
+            data = resp.json()
+        except httpx.HTTPError as e:
+            logger.error("API-Football request failed: %s", e)
+            return []
+
+    matches = [
+        m
+        for m in data.get("response", [])
+        if m["teams"]["home"]["id"] == tid or m["teams"]["away"]["id"] == tid
+    ]
+    if not matches:
+        return []
+    return _parse_live_match(matches[0])
+
+
+def _parse_live_match(match: dict) -> list[dict]:
+    """Convert one API-Football match dict into the internal event format."""
     events = match.get("events", [])
     fixture_info = {
         "fixture_id": match["fixture"]["id"],

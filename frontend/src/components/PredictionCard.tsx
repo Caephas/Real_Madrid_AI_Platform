@@ -1,5 +1,6 @@
 import { AnimatedCounter } from './AnimatedCounter';
 import { useCountdown } from '@/hooks/useCountdown';
+import { H2HRecord } from '@/api/client';
 import { cn } from '@/lib/utils';
 
 interface PredictionCardProps {
@@ -11,11 +12,13 @@ interface PredictionCardProps {
   win: number;
   draw: number;
   loss: number;
+  insights?: string[];
+  h2h?: H2HRecord | null;
   className?: string;
 }
 
 export function PredictionCard({
-  opponent, venue, date, matchday, targetIso, win, draw, loss, className,
+  opponent, venue, date, matchday, targetIso, win, draw, loss, insights, h2h, className,
 }: PredictionCardProps) {
   const winPct = Math.round(win * 100);
   const drawPct = Math.round(draw * 100);
@@ -59,6 +62,36 @@ export function PredictionCard({
         <ProbabilityBar label="Draw" value={drawPct} total={100} colorClass="bg-draw" textClass="text-draw" />
         <ProbabilityBar label="Loss" value={lossPct} total={100} colorClass="bg-loss" textClass="text-loss" />
       </div>
+
+      {/* Head-to-head */}
+      {h2h && h2h.meetings > 0 && (
+        <div className="pt-1">
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1.5">
+            Head to head · {h2h.meetings} meetings
+          </p>
+          <div className="flex items-center gap-1.5 text-xs font-data">
+            <span className="px-2 py-1 rounded bg-win/15 text-win font-semibold">{h2h.rm_wins}W</span>
+            <span className="px-2 py-1 rounded bg-draw/15 text-draw font-semibold">{h2h.draws}D</span>
+            <span className="px-2 py-1 rounded bg-loss/15 text-loss font-semibold">{h2h.opponent_wins}L</span>
+            <span className="ml-auto text-muted-foreground">
+              {h2h.rm_goals} – {h2h.opponent_goals} goals
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Model insights */}
+      {insights && insights.length > 0 && (
+        <div className="pt-1 space-y-1.5">
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Why the model leans this way</p>
+          {insights.map((insight, i) => (
+            <div key={i} className="flex items-start gap-2 text-xs text-foreground/85">
+              <span className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+              <span>{insight}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

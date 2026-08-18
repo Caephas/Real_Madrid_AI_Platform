@@ -8,6 +8,8 @@ import { MatchAnalysis } from '@/components/MatchAnalysis';
 import { ArticleReader } from '@/components/ArticleReader';
 import { CardSkeleton } from '@/components/LoadingSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import { StandingsTable } from '@/components/StandingsTable';
+import LoadingState from '@/components/ai/LoadingState';
 import { Send, Radio, Zap, Calendar, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +17,7 @@ interface PredictionResult {
   win: number;
   draw: number;
   loss: number;
+  insights?: string[];
 }
 
 export default function Dashboard() {
@@ -31,6 +34,11 @@ export default function Dashboard() {
   const articles = useApi(() => api.getArticles({ limit: 3 }), []);
   const commentary = useApi(() => api.getCommentary(541), []);
   const results = useApi(() => api.getResults(5), []);
+  const standings = useApi(() => api.getStandings(), []);
+  const h2h = useApi(
+    () => (selected ? api.getH2H(selected.opponent) : Promise.resolve(null)),
+    [selected?.opponent]
+  );
 
   const nextMatch = season.data?.next_match ?? null;
   const upcomingFixtures = (season.data?.fixtures ?? []).filter((f) => f.status === 'upcoming');
@@ -106,7 +114,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Prediction — auto-loaded from selected/next fixture */}
         {loading ? (
-          <CardSkeleton />
+          <div className="glass-card p-8 flex items-center justify-center">
+            <LoadingState label="Computing prediction" variant="Drive" />
+          </div>
         ) : predError ? (
           <ErrorBanner message={predError} onRetry={() => selected && selectMatch(selected)} />
         ) : hasPrediction ? (
@@ -119,6 +129,8 @@ export default function Dashboard() {
             win={prediction.win}
             draw={prediction.draw}
             loss={prediction.loss}
+            insights={prediction.insights}
+            h2h={h2h.data}
           />
         ) : (
           <div className="glass-card p-6 text-center text-muted-foreground">
@@ -292,6 +304,31 @@ export default function Dashboard() {
             <p className="text-sm text-muted-foreground">No articles found</p>
           )}
         </div>
+      </div>
+
+      {/* La Liga Standings */}
+      <div className="glass-card p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-primary" />
+            <h3 className="text-lg font-semibold">
+              La Liga Standings{' '}
+              <span className="text-xs text-muted-foreground font-normal">
+                {standings.data?.season ? `${standings.data.season}/${standings.data.season + 1}` : ''}
+              </span>
+            </h3>
+          </div>
+          <button onClick={() => navigate('/history')} className="text-xs text-primary hover:underline">
+            Season history →
+          </button>
+        </div>
+        {standings.loading ? (
+          <CardSkeleton className="!p-0 !border-0 !shadow-none !bg-transparent !backdrop-blur-none" />
+        ) : standings.data?.standings.length ? (
+          <StandingsTable standings={standings.data.standings} />
+        ) : (
+          <p className="text-sm text-muted-foreground">No standings available yet</p>
+        )}
       </div>
 
       {/* Quick Chat — full width */}

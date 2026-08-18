@@ -10,6 +10,7 @@ from app.config import settings
 from app.database import engine, Base
 from app.middleware import setup_middleware
 from app.prediction.model import load_model
+from app.prediction.features import load_feature_stats
 from app.prediction.mappings import load_mappings
 from app.prediction.router import router as prediction_router
 from app.content.router import router as content_router
@@ -38,6 +39,7 @@ async def lifespan(app: FastAPI):
     try:
         load_model()
         load_mappings()
+        load_feature_stats()
         logger.info("ML model and mappings loaded from %s", settings.model_dir)
     except FileNotFoundError as e:
         logger.warning(

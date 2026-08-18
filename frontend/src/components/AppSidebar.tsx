@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, MessageCircle, Radio, Newspaper, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, Radio, Newspaper, CalendarDays, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import madridCrest from '@/assets/madrid-crest.png';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/fixtures', label: 'Fixtures', icon: CalendarDays },
-  { path: '/chat', label: 'Chat', icon: MessageCircle },
-  { path: '/live', label: 'Live Match', icon: Radio },
+  { path: '/history', label: 'History', icon: History },
   { path: '/news', label: 'News', icon: Newspaper },
+  { path: '/live', label: 'Live Match', icon: Radio },
+  { path: '/chat', label: 'Chat', icon: MessageCircle },
 ];
 
 export function AppSidebar() {

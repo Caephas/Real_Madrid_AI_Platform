@@ -1,0 +1,32 @@
+/*
+ * Refero style: Hyperstudio — blueprint scratched into obsidian.
+ * https://styles.refero.design/style/8eb9c53e-d69c-497a-b640-610856cf3a60
+ * Adapted for the Real Madrid AI Platform: obsidian surfaces + gold accent
+ * (the brand's existing accent) instead of the style's neutral white accent.
+ * Paste after importing ai-theme.css.
+ */
+:root {
+  --page: #0b0d12;
+  --canvas: #0b0d12;
+  --surface: #08090d;
+  --inset: color-mix(in srgb, var(--ink-3) 8%, var(--surface));
+  --hover: color-mix(in srgb, var(--ink) 4%, var(--surface));
+  --hover-2: color-mix(in srgb, var(--ink) 8%, var(--surface));
+  --ink: #f3f3f3;
+  --ink-2: #9c9c9c;
+  --ink-3: #c1c1c1;
+  --line: #1d2027;
+  --line-strong: #252933;
+  --field: color-mix(in srgb, var(--ink-3) 8%, var(--surface));
+  --accent: #f2b900;
+  --accent-ink: #0b0d12;
+  --accent-tint: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  --orange: #f2b900;
+  --orange-tint: color-mix(in srgb, var(--orange) 12%, var(--surface));
+  --green: #2ebd85;
+  --radius-chip: 9999px;
+  --radius-control: 8px;
+  --radius-card: 10px;
+  --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono-face: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+}

@@ -1,8 +1,10 @@
 # Real Madrid AI Platform
 
-An AI-powered companion for Real Madrid fans: **match predictions**, **live
-commentary**, **personalized news**, an **agentic chatbot**, and a full
-**2026/27 season hub** — all in one app.
+A news and match-intelligence platform for Real Madrid fans. The core is
+**personalized news**, **match predictions**, **live commentary**, and a full
+**2026/27 season hub** (fixtures, standings, history, head-to-head). An
+agentic chat assistant is included as a companion for quick questions — not
+the main event.
 
 The platform is refreshed for the **2026/27 La Liga campaign**: the complete
 38-match schedule is bundled, the model is trained through the **2025/26
@@ -14,12 +16,14 @@ season**, and predictions now run on DeepSeek with streaming chat.
 
 | Feature | What it does |
 |---------|--------------|
-| **Agent Chatbot** | DeepSeek-powered assistant with conversation memory and **streaming answers**. Calls prediction, commentary, and news tools for real data — never hallucinated facts |
-| **Match Prediction** | XGBoost + Random Forest trained on 8 seasons of La Liga data (incl. xG, possession, shots) → W/D/L probabilities per fixture |
-| **Season Hub** | Full 2026/27 fixture list: matchdays, kickoffs, live countdowns, recent results, click-to-predict |
-| **Live Commentary** | Polls API-Football during matches and turns events into readable commentary |
 | **Personalized News** | RSS-ingested articles categorized by topic, with per-user recommendations |
+| **Match Prediction** | XGBoost + Random Forest trained on 8 seasons of La Liga data (incl. xG, possession, shots) → W/D/L probabilities per fixture |
+| **Prediction Insights** | Per-match explainability — which stats (opponent xG form, possession, shot volume) are driving the model's lean |
+| **Season Hub** | Full 2026/27 fixture list: matchdays, kickoffs, live countdowns, recent results, click-to-predict |
+| **Standings & History** | Live league table with last-5 form badges, season-by-season Real Madrid results, and head-to-head records |
+| **Live Commentary** | Polls API-Football during matches and turns events into readable commentary |
 | **Tactical Analysis** | AI narrative comparing both teams' form with key statistical factors |
+| **Chat Assistant** | DeepSeek-powered companion with streaming answers — asks the model, checks fixtures/news/live data, and remembers the conversation |
 
 ---
 
@@ -156,6 +160,10 @@ All endpoints are served from `http://localhost:8000` (Swagger UI at `/docs`).
 | `GET` | `/conversations/{id}` | Message history for a thread |
 | `POST` | `/predict` | W/D/L probabilities for a fixture |
 | `POST` | `/predict/analysis` | Prediction + AI tactical narrative + form comparison |
+| `GET` | `/standings` | League table (position, W/D/L, points, form) for a season |
+| `GET` | `/form` | Recent results (W/D/L) for any team |
+| `GET` | `/history` | Real Madrid's matches for a season |
+| `GET` | `/h2h` | Head-to-head record vs an opponent |
 | `GET` | `/next-match` | Next upcoming fixture |
 | `GET` | `/fixtures` | Remaining fixtures |
 | `GET` | `/season` | Full season info: fixtures, statuses, results |
@@ -210,8 +218,9 @@ python3 -m pipeline.scrape --output data/raw/
 ### Step 3 — Train
 
 `pipeline/train.py` trains XGBoost (with early stopping) and Random Forest,
-applies SMOTE for class imbalance, and selects the best model by **log loss**
-(better than accuracy for probability outputs). Artifacts:
+applies SMOTE for class imbalance, evaluates **Platt calibration** (auto-deploys
+it only when it actually lowers log loss), and selects the best model by
+**log loss** (better than accuracy for probability outputs). Artifacts:
 
 ```
 models/
@@ -219,6 +228,7 @@ models/
 ├── rf_model.pkl             # random forest (default at inference)
 ├── model_metrics.json       # accuracy, log loss, CV, class reports
 ├── feature_importance.json  # ranked feature importances
+├── feature_stats.json       # per-feature mean/std (prediction insights)
 └── *_mapping.json           # deterministic name → code mappings
 ```
 
@@ -272,10 +282,22 @@ every 24h while the app is up.
 ## Testing & Quality
 
 ```bash
-make test      # 62 pytest tests (backend + pipeline)
+make test      # 71 pytest tests (backend + pipeline)
 make lint      # ruff + black
 cd frontend && npm run lint && npm test   # frontend lint + vitest
 ```
+
+Pushes to `main` run a **GitHub Actions CI** workflow: pytest + ruff + black
+on the backend, lint + build + vitest on the frontend.
+
+## Docker (full stack)
+
+```bash
+docker compose up --build
+```
+
+This runs PostgreSQL, the backend, **and the frontend behind nginx**
+(http://localhost:8080) — no Node needed on the host.
 
 ---
 

@@ -3,6 +3,15 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
+// Proxy API calls to the backend, but let browser navigations (Accept: text/html)
+// fall through to the SPA instead of returning raw JSON.
+const apiProxy = (target = "http://localhost:8000") => ({
+  target,
+  bypass(req: { headers: { accept?: string } }) {
+    if (req.headers.accept?.includes("text/html")) return req.url;
+  },
+});
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -12,27 +21,25 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
     proxy: {
-      '/chat': {
-        target: 'http://localhost:8000',
-        bypass(req) {
-          // Browser navigation sends GET with text/html — let Vite serve the SPA
-          if (req.headers.accept?.includes('text/html')) return req.url;
-        },
-      },
-      '/predict/analysis': 'http://localhost:8000',
-      '/predict': 'http://localhost:8000',
-      '/commentary': 'http://localhost:8000',
-      '/articles': 'http://localhost:8000',
-      '/recommendations': 'http://localhost:8000',
-      '/health': 'http://localhost:8000',
-      '/next-match': 'http://localhost:8000',
-      '/next-fixture': 'http://localhost:8000',
-      '/season': 'http://localhost:8000',
-      '/results': 'http://localhost:8000',
-      '/chat/stream': 'http://localhost:8000',
-      '/conversations': 'http://localhost:8000',
-      '/fixtures': 'http://localhost:8000',
-      '/opponents': 'http://localhost:8000',
+      '/chat': apiProxy(),
+      '/chat/stream': apiProxy(),
+      '/predict': apiProxy(),
+      '/predict/analysis': apiProxy(),
+      '/commentary': apiProxy(),
+      '/articles': apiProxy(),
+      '/recommendations': apiProxy(),
+      '/health': apiProxy(),
+      '/next-match': apiProxy(),
+      '/next-fixture': apiProxy(),
+      '/season': apiProxy(),
+      '/results': apiProxy(),
+      '/standings': apiProxy(),
+      '/form': apiProxy(),
+      '/history': apiProxy(),
+      '/h2h': apiProxy(),
+      '/conversations': apiProxy(),
+      '/fixtures': apiProxy(),
+      '/opponents': apiProxy(),
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),

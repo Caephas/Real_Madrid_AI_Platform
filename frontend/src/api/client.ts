@@ -13,6 +13,7 @@ export interface PredictionResult {
   win: number;
   draw: number;
   loss: number;
+  insights?: string[];
 }
 
 export interface NextFixture {
@@ -78,6 +79,47 @@ export interface HistoryMessage {
   role: string;
   content: string;
   created_at: string | null;
+}
+
+export interface StandingRow {
+  position: number;
+  team: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  gf: number;
+  ga: number;
+  gd: number;
+  points: number;
+  form: string[];
+}
+
+export interface SeasonMatch {
+  date: string;
+  opponent: string;
+  venue: string;
+  result: 'W' | 'D' | 'L';
+  gf: number;
+  ga: number;
+}
+
+export interface H2HRecord {
+  opponent: string;
+  meetings: number;
+  rm_wins: number;
+  draws: number;
+  opponent_wins: number;
+  rm_goals: number;
+  opponent_goals: number;
+  recent: SeasonMatch[];
+}
+
+export interface ConversationSummary {
+  conversation_id: string;
+  last_message: string;
+  message_count: number;
+  updated_at: string | null;
 }
 
 export interface CommentaryItem {
@@ -149,10 +191,10 @@ function transformCommentary(raw: CommentaryResponse): LiveMatchData {
 }
 
 export const api = {
-  chat: (prompt: string, conversationId?: string) =>
+  chat: (prompt: string, conversationId?: string, userId?: string) =>
     request<ChatResponse>('/chat', {
       method: 'POST',
-      body: JSON.stringify({ message: prompt, conversation_id: conversationId }),
+      body: JSON.stringify({ message: prompt, conversation_id: conversationId, user_id: userId }),
     }),
 
   getConversation: (conversationId: string) =>
@@ -160,9 +202,15 @@ export const api = {
       `/conversations/${conversationId}`
     ),
 
+  getConversations: (userId: string) =>
+    request<{ user_id: string; conversations: ConversationSummary[] }>(
+      `/conversations?user_id=${encodeURIComponent(userId)}`
+    ),
+
   streamChat: async (
     message: string,
     conversationId: string | undefined,
+    userId: string | undefined,
     handlers: {
       onDelta: (text: string) => void;
       onTool: (name: string) => void;
@@ -174,7 +222,7 @@ export const api = {
     const res = await fetch(`${BASE}/chat/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, conversation_id: conversationId }),
+      body: JSON.stringify({ message, conversation_id: conversationId, user_id: userId }),
       signal,
     });
     if (!res.ok || !res.body) {
@@ -241,4 +289,24 @@ export const api = {
 
   getResults: (limit: number = 5) =>
     request<{ results: MatchResult[] }>(`/results?limit=${limit}`),
+
+  getStandings: (season?: number) =>
+    request<{ season: number | null; available_seasons: number[]; standings: StandingRow[] }>(
+      `/standings${season ? `?season=${season}` : ''}`
+    ),
+
+  getForm: (team: string, season?: number, limit: number = 5) => {
+    const params = new URLSearchParams({ team });
+    if (season) params.set('season', String(season));
+    params.set('limit', String(limit));
+    return request<{ team: string; form: string[] }>(`/form?${params.toString()}`);
+  },
+
+  getHistory: (season?: number) =>
+    request<{ season: number | null; available_seasons: number[]; matches: SeasonMatch[] }>(
+      `/history${season ? `?season=${season}` : ''}`
+    ),
+
+  getH2H: (opponent: string) =>
+    request<H2HRecord>(`/h2h?opponent=${encodeURIComponent(opponent)}`),
 };

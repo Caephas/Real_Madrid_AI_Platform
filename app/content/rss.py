@@ -23,21 +23,108 @@ RSS_URL = "https://www.managingmadrid.com/rss/current.xml"
 
 # Keyword-based categorization — simple, fast, no ML dependency
 _CATEGORY_RULES: list[tuple[str, list[str]]] = [
-    ("Match Reports", ["match report", "match recap", "post-match", "full time", "final score",
-                        "defeated", "victory", "beat", "drew", "lost to", "win over"]),
-    ("Match Previews", ["preview", "match preview", "lineup", "predicted xi", "starting xi",
-                        "team news", "pre-match", "ahead of"]),
-    ("Transfers", ["transfer", "signing", "signs", "deal", "bid", "rumor", "target",
-                   "contract", "extension", "renewal", "loan", "release clause", "fee"]),
-    ("Tactical Analysis", ["tactical", "analysis", "formation", "pressing", "possession",
-                           "build-up", "defensive", "attacking", "system", "how they play"]),
-    ("Player News", ["injury", "injured", "doubtful", "sidelined", "return", "fitness",
-                     "training", "academy", "debut", "milestone", "record", "goal scorer",
-                     "captain", "coach", "manager", "praises", "reflects"]),
-    ("Player Interviews", ["interview", "exclusive", "speaks", "talks", "told", "said",
-                           "according to", "quotes", "managing madrid"]),
-    ("Breaking News", ["breaking", "official", "confirmed", "announce", "just in",
-                       "report", "latest"]),
+    (
+        "Match Reports",
+        [
+            "match report",
+            "match recap",
+            "post-match",
+            "full time",
+            "final score",
+            "defeated",
+            "victory",
+            "beat",
+            "drew",
+            "lost to",
+            "win over",
+        ],
+    ),
+    (
+        "Match Previews",
+        [
+            "preview",
+            "match preview",
+            "lineup",
+            "predicted xi",
+            "starting xi",
+            "team news",
+            "pre-match",
+            "ahead of",
+        ],
+    ),
+    (
+        "Transfers",
+        [
+            "transfer",
+            "signing",
+            "signs",
+            "deal",
+            "bid",
+            "rumor",
+            "target",
+            "contract",
+            "extension",
+            "renewal",
+            "loan",
+            "release clause",
+            "fee",
+        ],
+    ),
+    (
+        "Tactical Analysis",
+        [
+            "tactical",
+            "analysis",
+            "formation",
+            "pressing",
+            "possession",
+            "build-up",
+            "defensive",
+            "attacking",
+            "system",
+            "how they play",
+        ],
+    ),
+    (
+        "Player News",
+        [
+            "injury",
+            "injured",
+            "doubtful",
+            "sidelined",
+            "return",
+            "fitness",
+            "training",
+            "academy",
+            "debut",
+            "milestone",
+            "record",
+            "goal scorer",
+            "captain",
+            "coach",
+            "manager",
+            "praises",
+            "reflects",
+        ],
+    ),
+    (
+        "Player Interviews",
+        [
+            "interview",
+            "exclusive",
+            "speaks",
+            "talks",
+            "told",
+            "said",
+            "according to",
+            "quotes",
+            "managing madrid",
+        ],
+    ),
+    (
+        "Breaking News",
+        ["breaking", "official", "confirmed", "announce", "just in", "report", "latest"],
+    ),
 ]
 
 
@@ -58,11 +145,14 @@ def _extract_image(html: str) -> str | None:
 
 class _HTMLStripper(HTMLParser):
     """Minimal HTML tag stripper."""
+
     def __init__(self):
         super().__init__()
         self._parts: list[str] = []
+
     def handle_data(self, data: str):
         self._parts.append(data)
+
     def get_text(self) -> str:
         return " ".join(self._parts).strip()
 
@@ -86,6 +176,7 @@ def _parse_published(entry: dict) -> datetime | None:
     if published:
         try:
             from time import mktime
+
             return datetime.fromtimestamp(mktime(published), tz=timezone.utc)
         except (ValueError, OverflowError):
             pass

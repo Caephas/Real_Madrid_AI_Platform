@@ -45,7 +45,8 @@ def get_live_events(team_id: int | None = None) -> list[dict]:
 
     # Filter for the requested team
     matches = [
-        m for m in data.get("response", [])
+        m
+        for m in data.get("response", [])
         if m["teams"]["home"]["id"] == tid or m["teams"]["away"]["id"] == tid
     ]
 

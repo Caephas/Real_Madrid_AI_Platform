@@ -40,7 +40,9 @@ async def lifespan(app: FastAPI):
         load_mappings()
         logger.info("ML model and mappings loaded from %s", settings.model_dir)
     except FileNotFoundError as e:
-        logger.warning("Model/mappings not found: %s. /predict will fail until `make pipeline` is run.", e)
+        logger.warning(
+            "Model/mappings not found: %s. /predict will fail until `make pipeline` is run.", e
+        )
 
     # Start APScheduler for periodic tasks
     from datetime import datetime
@@ -50,17 +52,24 @@ async def lifespan(app: FastAPI):
         """Background job: refresh team_stats if stale."""
         try:
             from pipeline.refresh_stats import refresh
+
             refresh(force=False)
         except Exception as e:
             logger.warning("Stats refresh failed (non-fatal): %s", e)
 
     scheduler = BackgroundScheduler()
     scheduler.add_job(
-        fetch_and_store_articles, "interval", hours=6, id="rss_fetch",
+        fetch_and_store_articles,
+        "interval",
+        hours=6,
+        id="rss_fetch",
         next_run_time=datetime.now(),  # run immediately on startup
     )
     scheduler.add_job(
-        _refresh_stats_job, "interval", hours=24, id="stats_refresh",
+        _refresh_stats_job,
+        "interval",
+        hours=24,
+        id="stats_refresh",
         next_run_time=datetime.now(),  # check staleness on startup
     )
     scheduler.start()
@@ -102,15 +111,35 @@ def health_check():
     except Exception:
         pass
 
-    # Check Ollama
-    ollama_status = "skipped"
-    if settings.llm_provider == "ollama":
-        import httpx
+    # Check LLM provider
+    import httpx
 
+    llm_status = "skipped"
+    if settings.llm_provider == "deepseek":
+        if not settings.deepseek_api_key:
+            llm_status = "not_configured"
+        else:
+            try:
+                r = httpx.get(
+                    f"{settings.deepseek_base_url}/models",
+                    headers={"Authorization": f"Bearer {settings.deepseek_api_key}"},
+                    timeout=5,
+                )
+                llm_status = "connected" if r.status_code == 200 else f"error ({r.status_code})"
+            except Exception:
+                llm_status = "disconnected"
+    elif settings.llm_provider == "ollama":
         try:
             r = httpx.get(f"{settings.ollama_base_url}/api/tags", timeout=3)
-            ollama_status = "connected" if r.status_code == 200 else "error"
+            llm_status = "connected" if r.status_code == 200 else "error"
         except Exception:
-            ollama_status = "disconnected"
+            llm_status = "disconnected"
+    elif settings.llm_provider == "gemini":
+        llm_status = "connected" if settings.gemini_api_key else "not_configured"
 
-    return {"status": "ok", "db": db_status, "ollama": ollama_status}
+    return {
+        "status": "ok",
+        "db": db_status,
+        "llm": llm_status,
+        "llm_provider": settings.llm_provider,
+    }

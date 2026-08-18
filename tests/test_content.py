@@ -53,9 +53,27 @@ def test_make_article_id_different_inputs():
 def seed_articles(db_session):
     """Seed DB with test articles."""
     articles = [
-        Article(article_id="a1", title="Transfer News", category="Transfers", link="https://example.com/1", content="text"),
-        Article(article_id="a2", title="Match Preview", category="Match Previews", link="https://example.com/2", content="text"),
-        Article(article_id="a3", title="Breaking", category="Breaking News", link="https://example.com/3", content="text"),
+        Article(
+            article_id="a1",
+            title="Transfer News",
+            category="Transfers",
+            link="https://example.com/1",
+            content="text",
+        ),
+        Article(
+            article_id="a2",
+            title="Match Preview",
+            category="Match Previews",
+            link="https://example.com/2",
+            content="text",
+        ),
+        Article(
+            article_id="a3",
+            title="Breaking",
+            category="Breaking News",
+            link="https://example.com/3",
+            content="text",
+        ),
     ]
     for a in articles:
         db_session.add(a)

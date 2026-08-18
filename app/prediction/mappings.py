@@ -6,12 +6,16 @@ They ensure the same numeric encoding used during training is applied at inferen
 """
 
 import json
+import logging
 from pathlib import Path
 
 from app.config import settings
 
+logger = logging.getLogger("app.prediction")
+
 _opponent_mapping: dict[str, int] | None = None
 _venue_mapping: dict[str, int] | None = None
+_unknown_opponent_codes: dict[str, int] = {}
 
 
 def _load_json(filename: str) -> dict:
@@ -30,14 +34,28 @@ def load_mappings() -> None:
 
 
 def get_opponent_code(opponent: str) -> int:
-    """Map opponent name to numeric code. Raises ValueError if unknown."""
+    """Map opponent name to numeric code.
+
+    Teams that joined La Liga after the last model training (promoted sides)
+    are assigned deterministic codes above the trained range. Tree models
+    handle unseen categorical integers gracefully, so predictions stay live.
+    """
     if _opponent_mapping is None:
         raise RuntimeError("Mappings not loaded.")
     code = _opponent_mapping.get(opponent)
-    if code is None:
-        valid = ", ".join(sorted(_opponent_mapping.keys()))
-        raise ValueError(f"Unknown opponent '{opponent}'. Valid opponents: {valid}")
-    return code
+    if code is not None:
+        return code
+
+    # New-season team: assign a stable code beyond the trained range
+    if opponent in _unknown_opponent_codes:
+        return _unknown_opponent_codes[opponent]
+
+    next_code = max(_opponent_mapping.values(), default=-1) + 1
+    if _unknown_opponent_codes:
+        next_code = max(next_code, max(_unknown_opponent_codes.values()) + 1)
+    _unknown_opponent_codes[opponent] = next_code
+    logger.warning("Opponent '%s' not in trained mapping — assigned code %d", opponent, next_code)
+    return next_code
 
 
 def get_venue_code(venue: str) -> int:
@@ -56,4 +74,9 @@ def get_known_opponents() -> list[str]:
     """Return sorted list of valid opponent names."""
     if _opponent_mapping is None:
         return []
-    return sorted(_opponent_mapping.keys())
+    return sorted(set(_opponent_mapping.keys()) | set(_unknown_opponent_codes.keys()))
+
+
+def reset_unknown_codes() -> None:
+    """Clear dynamically assigned opponent codes (used by tests)."""
+    _unknown_opponent_codes.clear()

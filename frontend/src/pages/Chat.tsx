@@ -2,14 +2,16 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '@/api/client';
 import { ChatMessage, ChatMessageData, TypingIndicator } from '@/components/ChatMessage';
-import { Send } from 'lucide-react';
+import { Send, RotateCcw } from 'lucide-react';
 
 const SUGGESTED_PROMPTS = [
-  "What are our chances against Barcelona?",
+  "Who are we playing next and what are our chances?",
   "Show me the latest transfer news",
   "How are we doing in the current match?",
   "What's our recent form?",
 ];
+
+const CONVERSATION_KEY = 'rm_chat_conversation_id';
 
 export default function Chat() {
   const [searchParams] = useSearchParams();
@@ -17,20 +19,45 @@ export default function Chat() {
     {
       id: 'system-1',
       role: 'system',
-      content: "I'm the Real Madrid AI Assistant. I can predict match outcomes, fetch live commentary, and find news for you.",
+      content: "I'm the Real Madrid AI Assistant. I can predict match outcomes, fetch live commentary, and find news for you — and I remember this conversation.",
     },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [streamingId, setStreamingId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const initialPromptSent = useRef(false);
+  const conversationIdRef = useRef<string | null>(localStorage.getItem(CONVERSATION_KEY));
 
   const scrollToBottom = () => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(scrollToBottom, [messages, loading]);
+
+  // Restore previous conversation
+  useEffect(() => {
+    const id = conversationIdRef.current;
+    if (!id) return;
+    api.getConversation(id)
+      .then((data) => {
+        if (!data.messages.length) return;
+        setMessages((prev) => [
+          ...prev,
+          ...data.messages.map((m, i) => ({
+            id: `history-${i}-${m.created_at ?? ''}`,
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          })),
+        ]);
+      })
+      .catch(() => {
+        // Stale conversation — start fresh
+        conversationIdRef.current = null;
+        localStorage.removeItem(CONVERSATION_KEY);
+      });
+  }, []);
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
@@ -40,29 +67,76 @@ export default function Chat() {
       role: 'user',
       content: text.trim(),
     };
+    const assistantId = `assistant-${Date.now()}`;
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
 
+    // Stream the assistant response into a live-updating bubble
+    setMessages((prev) => [
+      ...prev,
+      { id: assistantId, role: 'assistant', content: '', tools_used: [] },
+    ]);
+    setStreamingId(assistantId);
+
     try {
-      const res = await api.chat(text.trim());
-      const assistantMsg: ChatMessageData = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: res.response,
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
+      await api.streamChat(
+        text.trim(),
+        conversationIdRef.current ?? undefined,
+        {
+          onDelta: (content) => {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === assistantId ? { ...m, content: m.content + content } : m))
+            );
+          },
+          onTool: (name) => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? { ...m, tools_used: [...(m.tools_used ?? []), name] }
+                  : m
+              )
+            );
+          },
+          onDone: (conversationId) => {
+            conversationIdRef.current = conversationId;
+            localStorage.setItem(CONVERSATION_KEY, conversationId);
+          },
+          onError: (message) => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? { ...m, content: m.content || `⚠️ ${message}` }
+                  : m
+              )
+            );
+          },
+        }
+      );
     } catch {
-      const errorMsg: ChatMessageData = {
-        id: `error-${Date.now()}`,
-        role: 'assistant',
-        content: 'Sorry, I couldn\'t process your request. The backend may be unavailable.',
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? { ...m, content: m.content || "Sorry, I couldn't process your request. The backend may be unavailable." }
+            : m
+        )
+      );
     } finally {
       setLoading(false);
+      setStreamingId(null);
     }
   }, [loading]);
+
+  const newConversation = useCallback(() => {
+    conversationIdRef.current = null;
+    localStorage.removeItem(CONVERSATION_KEY);
+    setMessages([{
+      id: 'system-1',
+      role: 'system',
+      content: "I'm the Real Madrid AI Assistant. I can predict match outcomes, fetch live commentary, and find news for you — and I remember this conversation.",
+    }]);
+    inputRef.current?.focus();
+  }, []);
 
   // Handle pre-filled prompt from URL
   useEffect(() => {
@@ -89,7 +163,7 @@ export default function Chat() {
         {messages.map((msg) => (
           <ChatMessage key={msg.id} message={msg} />
         ))}
-        {loading && <TypingIndicator />}
+        {loading && !streamingId && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>
 
@@ -110,6 +184,17 @@ export default function Chat() {
 
       {/* Input */}
       <div className="glass-card-static p-3 flex gap-2 items-end">
+        {hasUserMessages && (
+          <button
+            onClick={newConversation}
+            disabled={loading}
+            title="Start a new conversation"
+            className="text-xs text-muted-foreground hover:text-primary disabled:opacity-40 px-2 py-1.5 rounded-lg hover:bg-muted/20 transition-colors flex items-center gap-1"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            New
+          </button>
+        )}
         <textarea
           ref={inputRef}
           value={input}

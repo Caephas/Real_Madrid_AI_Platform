@@ -8,6 +8,9 @@ After scraping, recomputes 5-game rolling averages and upserts into the
 PostgreSQL team_stats table. The prediction model then automatically
 uses fresh rolling stats on the next /predict call.
 
+If fbref is unreachable (403 on some networks), falls back to
+football-data.co.uk via pipeline/fetch_season.py, which works anywhere.
+
 Usage:
     python3 -m pipeline.refresh_stats
     python3 -m pipeline.refresh_stats --check-only   # exit 0 if stale, 1 if fresh
@@ -28,6 +31,7 @@ from sqlalchemy.orm import sessionmaker
 from app.config import settings
 from app.database import Base
 from app.models import TeamStats
+from app.prediction.features import STAT_COLS, normalize_team_name
 
 logger = logging.getLogger("pipeline.refresh")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -42,7 +46,6 @@ HEADERS = {
 }
 REQUEST_DELAY_S = 10
 ROLLING_WINDOW = 5
-STAT_COLS = ["gf", "ga", "sh", "sot", "dist", "fk", "pk", "pkatt"]
 STALENESS_HOURS = 48  # refresh if team_stats older than this
 
 
@@ -102,7 +105,9 @@ def scrape_current_season() -> pd.DataFrame:
     all_matches: list[pd.DataFrame] = []
 
     for team_url in team_urls:
-        team_name = team_url.split("/")[-1].replace("-Stats", "").replace("-", " ")
+        team_name = normalize_team_name(
+            team_url.split("/")[-1].replace("-Stats", "").replace("-", " ")
+        )
         logger.info("  %s", team_name)
 
         try:
@@ -121,7 +126,8 @@ def scrape_current_season() -> pd.DataFrame:
         # Find shooting stats link
         team_soup = BeautifulSoup(team_resp.text, "html.parser")
         shooting_links = [
-            a.get("href") for a in team_soup.find_all("a")
+            a.get("href")
+            for a in team_soup.find_all("a")
             if a.get("href") and "all_comps/shooting/" in a.get("href")
         ]
         if not shooting_links:
@@ -213,7 +219,16 @@ def refresh(force: bool = False) -> bool:
 
     # Check if we have existing raw data to append to
     raw_path = "data/raw/la_liga_10_seasons.csv"
-    matches = scrape_current_season()
+    try:
+        matches = scrape_current_season()
+    except RuntimeError as e:
+        # fbref blocks many networks (403) — fall back to football-data.co.uk,
+        # which works everywhere. Best effort: current season, then last season.
+        logger.warning("fbref unreachable (%s) — falling back to football-data.co.uk", e)
+        if _refresh_via_football_data(raw_path):
+            logger.info("Refresh complete via football-data.co.uk")
+            return True
+        raise
 
     # Also merge with existing data if available (for rolling window continuity)
     if os.path.exists(raw_path):
@@ -232,14 +247,42 @@ def refresh(force: bool = False) -> bool:
     return True
 
 
+def _refresh_via_football_data(raw_path: str) -> bool:
+    """Fetch the current (or last) season from football-data.co.uk and update stats."""
+    from pipeline.fetch_season import fetch_season, merge_into_raw
+
+    year = datetime.now().year
+    season_codes = [
+        f"{year % 100:02d}{(year + 1) % 100:02d}",  # e.g. 2627
+        f"{(year - 1) % 100:02d}{year % 100:02d}",  # e.g. 2526
+    ]
+    for code in season_codes:
+        try:
+            out = fetch_season(code, "data/raw/", raw_path, source="football-data")
+        except Exception as e:
+            logger.warning("fetch_season %s failed: %s", code, e)
+            continue
+        merge_into_raw(out, raw_path, base_path=raw_path)
+        matches = pd.read_csv(raw_path)
+        matches["date"] = pd.to_datetime(matches["date"])
+        compute_and_upsert(matches)
+        return True
+    return False
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Refresh team_stats with current season data")
-    parser.add_argument("--force", action="store_true", help="Force refresh even if stats are fresh")
-    parser.add_argument("--check-only", action="store_true", help="Only check staleness, exit 0=stale 1=fresh")
+    parser.add_argument(
+        "--force", action="store_true", help="Force refresh even if stats are fresh"
+    )
+    parser.add_argument(
+        "--check-only", action="store_true", help="Only check staleness, exit 0=stale 1=fresh"
+    )
     args = parser.parse_args()
 
     if args.check_only:
         import sys
+
         sys.exit(0 if is_stale() else 1)
 
     refresh(force=args.force)

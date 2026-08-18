@@ -40,8 +40,44 @@ export interface MatchAnalysis {
   ai_narrative: string;
 }
 
+export interface Fixture {
+  matchday: number;
+  date: string;
+  opponent: string;
+  venue: 'Home' | 'Away';
+  kickoff: string | null;
+  api_source: boolean;
+  status?: 'upcoming' | 'finished';
+  result?: 'W' | 'D' | 'L';
+  score?: string;
+}
+
+export interface SeasonInfo {
+  season: string;
+  competition: string;
+  start_date: string | null;
+  end_date: string | null;
+  next_match: Fixture | null;
+  fixtures: Fixture[];
+}
+
+export interface MatchResult {
+  date: string;
+  opponent: string;
+  venue: string;
+  score: string;
+  result: 'W' | 'D' | 'L';
+}
+
 export interface ChatResponse {
   response: string;
+  conversation_id: string;
+}
+
+export interface HistoryMessage {
+  role: string;
+  content: string;
+  created_at: string | null;
 }
 
 export interface CommentaryItem {
@@ -113,11 +149,64 @@ function transformCommentary(raw: CommentaryResponse): LiveMatchData {
 }
 
 export const api = {
-  chat: (prompt: string) =>
+  chat: (prompt: string, conversationId?: string) =>
     request<ChatResponse>('/chat', {
       method: 'POST',
-      body: JSON.stringify({ message: prompt }),
+      body: JSON.stringify({ message: prompt, conversation_id: conversationId }),
     }),
+
+  getConversation: (conversationId: string) =>
+    request<{ conversation_id: string; messages: HistoryMessage[] }>(
+      `/conversations/${conversationId}`
+    ),
+
+  streamChat: async (
+    message: string,
+    conversationId: string | undefined,
+    handlers: {
+      onDelta: (text: string) => void;
+      onTool: (name: string) => void;
+      onDone: (conversationId: string) => void;
+      onError: (message: string) => void;
+    },
+    signal?: AbortSignal,
+  ) => {
+    const res = await fetch(`${BASE}/chat/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, conversation_id: conversationId }),
+      signal,
+    });
+    if (!res.ok || !res.body) {
+      throw new Error(`API Error: ${res.status} ${res.statusText}`);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const chunks = buffer.split('\n\n');
+      buffer = chunks.pop() ?? '';
+      for (const chunk of chunks) {
+        for (const line of chunk.split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.type === 'delta') handlers.onDelta(event.content);
+            else if (event.type === 'tool') handlers.onTool(event.name);
+            else if (event.type === 'done') handlers.onDone(event.conversation_id);
+            else if (event.type === 'error') handlers.onError(event.message);
+          } catch {
+            // skip malformed/partial frames
+          }
+        }
+      }
+    }
+  },
 
   predict: (opponent: string, venue: string, date: string) =>
     request<PredictionResult>('/predict', {
@@ -147,4 +236,9 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ opponent, venue, date }),
     }),
+
+  getSeason: () => request<SeasonInfo>('/season'),
+
+  getResults: (limit: number = 5) =>
+    request<{ results: MatchResult[] }>(`/results?limit=${limit}`),
 };

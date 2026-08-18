@@ -1,16 +1,20 @@
 # File: app/prediction/features.py
 """Feature vector construction for match prediction.
 
-Builds the 20-feature vector that the model expects:
-  [venue_code, opp_code, hour, day_code,
-   gf_rolling, ga_rolling, sh_rolling, sot_rolling, dist_rolling, fk_rolling, pk_rolling, pkatt_rolling,
-   opp_gf_rolling, opp_ga_rolling, opp_sh_rolling, opp_sot_rolling, opp_dist_rolling, opp_fk_rolling, opp_pk_rolling, opp_pkatt_rolling]
+This module is the single source of truth for model features. The offline
+pipeline (pipeline/clean.py, pipeline/train.py) imports these constants so
+training and inference can never drift apart.
 
-RM's rolling stats come from the team_stats PostgreSQL table.
-Opponent's rolling stats also come from team_stats.
+Features (26):
+  [venue_code, opp_code, hour, day_code] + 11 RM rolling stats + 11 opponent rolling stats
+
+Rolling stats are 5-game averages (closed left — no target leakage):
+  goals for, goals against, shots, shots on target, avg shot distance,
+  free-kick goals, penalties scored, penalty attempts, xG, xGA, possession.
 """
 
 from datetime import datetime
+import logging
 
 import pandas as pd
 from sqlalchemy.orm import Session
@@ -18,33 +22,54 @@ from sqlalchemy.orm import Session
 from app.models import TeamStats
 from app.prediction.mappings import get_opponent_code, get_venue_code
 
-ROLLING_COLS = [
-    "gf_rolling", "ga_rolling", "sh_rolling", "sot_rolling",
-    "dist_rolling", "fk_rolling", "pk_rolling", "pkatt_rolling",
-]
+logger = logging.getLogger("app.prediction")
+
+STAT_COLS = ["gf", "ga", "sh", "sot", "dist", "fk", "pk", "pkatt", "xg", "xga", "poss"]
+ROLLING_COLS = [f"{c}_rolling" for c in STAT_COLS]
+OPP_ROLLING_COLS = [f"opp_{c}" for c in ROLLING_COLS]
+MODEL_FEATURES = ["venue_code", "opp_code", "hour", "day_code", *ROLLING_COLS, *OPP_ROLLING_COLS]
 
 # fbref uses ASCII names; fixture schedule / opponent mapping may use accented names
-_TEAM_NAME_ALIASES: dict[str, str] = {
+TEAM_NAME_ALIASES: dict[str, str] = {
     "Atlético Madrid": "Atletico Madrid",
     "Alavés": "Alaves",
     "Cádiz": "Cadiz",
     "Leganés": "Leganes",
     "Betis": "Real Betis",
+    "Málaga": "Malaga",
+    "Deportivo La Coruña": "Deportivo La Coruna",
 }
 
 
-def _normalize_team_name(name: str) -> str:
+def normalize_team_name(name: str) -> str:
     """Map accented / alternate names to the fbref ASCII form stored in team_stats."""
-    return _TEAM_NAME_ALIASES.get(name, name)
+    return TEAM_NAME_ALIASES.get(name, name)
 
 
 def _get_team_rolling(db: Session, team_name: str) -> dict[str, float]:
-    """Lookup rolling stats for a team from PostgreSQL. O(1) — PK lookup."""
-    normalized = _normalize_team_name(team_name)
+    """Lookup rolling stats for a team from PostgreSQL.
+
+    Falls back to the league average when a team has no row yet (e.g. a
+    promoted side early in the season) so predictions never hard-fail.
+    """
+    normalized = normalize_team_name(team_name)
     stats = db.get(TeamStats, normalized)
-    if stats is None:
-        raise ValueError(f"No rolling stats found for '{team_name}'. Run `make pipeline` to populate team_stats.")
-    return {col: getattr(stats, col) for col in ROLLING_COLS}
+    if stats is not None:
+        return {col: getattr(stats, col) for col in ROLLING_COLS}
+    return _league_average_rolling(db, team_name)
+
+
+def _league_average_rolling(db: Session, team_name: str) -> dict[str, float]:
+    """Average rolling stats across all teams in team_stats."""
+    rows = db.query(TeamStats).all()
+    if not rows:
+        raise ValueError(
+            f"No rolling stats found for '{team_name}' (team_stats is empty). "
+            "Run `make refresh` or `make pipeline` to populate team_stats."
+        )
+    avg = {col: sum(getattr(r, col) for r in rows) / len(rows) for col in ROLLING_COLS}
+    logger.info("No team_stats row for '%s' — using league average for feature vector", team_name)
+    return avg
 
 
 def build_feature_vector(
@@ -54,7 +79,7 @@ def build_feature_vector(
     db: Session,
     team_name: str = "Real Madrid",
 ) -> pd.DataFrame:
-    """Construct a single-row DataFrame with the 20 features the model expects.
+    """Construct a single-row DataFrame with the model's feature vector.
 
     Args:
         opponent: Opponent team name (must match training data, e.g. "Barcelona")
@@ -64,7 +89,7 @@ def build_feature_vector(
         team_name: Team to predict for (default: Real Madrid)
 
     Returns:
-        DataFrame with shape (1, 20) — ready for model.predict() / model.predict_proba()
+        DataFrame with shape (1, len(MODEL_FEATURES)) — ready for model.predict().
     """
     opp_code = get_opponent_code(opponent)
     venue_code = get_venue_code(venue)

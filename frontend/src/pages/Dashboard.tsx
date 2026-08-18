@@ -1,70 +1,70 @@
-// File: frontend/src/pages/Dashboard.tsx
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { api, Article } from '@/api/client';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { api, Article, Fixture } from '@/api/client';
 import { useApi } from '@/hooks/useApi';
+import { useCountdown, fixtureTargetIso } from '@/hooks/useCountdown';
 import { PredictionCard } from '@/components/PredictionCard';
 import { MatchAnalysis } from '@/components/MatchAnalysis';
 import { ArticleReader } from '@/components/ArticleReader';
 import { CardSkeleton } from '@/components/LoadingSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
-import { Send, Radio, Zap, Calendar } from 'lucide-react';
+import { Send, Radio, Zap, Calendar, Trophy } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface MatchInfo {
-  opponent: string;
-  venue: string;
-  date: string;
+interface PredictionResult {
+  win: number;
+  draw: number;
+  loss: number;
 }
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [quickChat, setQuickChat] = useState('');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-
-  // Fixture + prediction state
-  const [nextMatch, setNextMatch] = useState<MatchInfo | null>(null);
-  const [upcomingFixtures, setUpcomingFixtures] = useState<MatchInfo[]>([]);
-  const [fixtureLoading, setFixtureLoading] = useState(true);
-  const [prediction, setPrediction] = useState<{ win: number; draw: number; loss: number } | null>(null);
+  const [selected, setSelected] = useState<Fixture | null>(null);
+  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [predLoading, setPredLoading] = useState(false);
   const [predError, setPredError] = useState<string | null>(null);
 
+  const season = useApi(() => api.getSeason(), []);
   const articles = useApi(() => api.getArticles({ limit: 3 }), []);
   const commentary = useApi(() => api.getCommentary(541), []);
+  const results = useApi(() => api.getResults(5), []);
 
-  // Fetch next match + all remaining fixtures
-  useEffect(() => {
-    setFixtureLoading(true);
-    Promise.all([
-      fetch('/next-match').then((r) => r.json()),
-      fetch('/fixtures').then((r) => r.json()),
-    ])
-      .then(([next, all]) => {
-        if (next && next.opponent) {
-          setNextMatch(next);
-        }
-        if (all && all.fixtures) {
-          setUpcomingFixtures(all.fixtures);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setFixtureLoading(false));
-  }, []);
+  const nextMatch = season.data?.next_match ?? null;
+  const upcomingFixtures = (season.data?.fixtures ?? []).filter((f) => f.status === 'upcoming');
+  const countdown = useCountdown(nextMatch ? fixtureTargetIso(nextMatch) : null);
 
-  // Auto-predict when nextMatch is set
+  // Preselect a match from the Fixtures page (?opponent=&date=)
   useEffect(() => {
-    if (!nextMatch) return;
+    const opponent = searchParams.get('opponent');
+    const date = searchParams.get('date');
+    if (opponent && date && season.data) {
+      const match = season.data.fixtures.find((f) => f.opponent === opponent && f.date === date);
+      if (match) {
+        setSelected(match);
+        setPrediction(null);
+      }
+    }
+  }, [searchParams, season.data]);
+
+  // Auto-predict when a match is selected
+  useEffect(() => {
+    if (!selected) return;
     setPredLoading(true);
     setPredError(null);
-    api.predict(nextMatch.opponent, nextMatch.venue, nextMatch.date)
+    setPrediction(null);
+    api.predict(selected.opponent, selected.venue, selected.date)
       .then(setPrediction)
       .catch((e) => setPredError(e.message))
       .finally(() => setPredLoading(false));
-  }, [nextMatch]);
+  }, [selected]);
 
-  const predictMatch = (match: MatchInfo) => {
-    setNextMatch(match);
+  const selectMatch = (match: Fixture) => {
+    setSelected(match);
     setPrediction(null);
+    navigate('/', { replace: true });
   };
 
   const handleQuickChat = (e: React.FormEvent) => {
@@ -77,40 +77,61 @@ export default function Dashboard() {
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
+  const loading = season.loading || predLoading;
+  const hasPrediction = prediction && selected;
+
   return (
     <div className="space-y-8 animate-fade-in-up">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Match Intelligence</h1>
-        <p className="text-muted-foreground mt-1">Real-time predictions, news, and live insights</p>
+      {/* Season header */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-3xl font-bold tracking-tight">Match Intelligence</h1>
+            <span className="text-xs font-semibold text-primary bg-primary/10 border border-primary/20 rounded-full px-2.5 py-1">
+              {season.data?.season ?? '2026/27'} · {season.data?.competition ?? 'La Liga'}
+            </span>
+          </div>
+          <p className="text-muted-foreground mt-1">Real-time predictions, news, and live insights</p>
+        </div>
+        {nextMatch && !countdown.isPast && (
+          <div className="glass-card-static px-5 py-3 text-right">
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Next kickoff</p>
+            <p className="text-lg font-bold font-data text-primary">
+              {countdown.days}d {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Prediction — auto-loaded from next fixture */}
-        {fixtureLoading || predLoading ? (
+        {/* Prediction — auto-loaded from selected/next fixture */}
+        {loading ? (
           <CardSkeleton />
         ) : predError ? (
-          <ErrorBanner message="Could not load prediction" onRetry={() => window.location.reload()} />
-        ) : prediction && nextMatch ? (
+          <ErrorBanner message={predError} onRetry={() => selected && selectMatch(selected)} />
+        ) : hasPrediction ? (
           <PredictionCard
-            opponent={nextMatch.opponent}
-            venue={nextMatch.venue}
-            date={nextMatch.date}
+            opponent={selected.opponent}
+            venue={selected.venue}
+            date={selected.date}
+            matchday={selected.matchday}
+            targetIso={selected.kickoff}
             win={prediction.win}
             draw={prediction.draw}
             loss={prediction.loss}
           />
         ) : (
           <div className="glass-card p-6 text-center text-muted-foreground">
-            No upcoming fixtures
+            No upcoming fixtures — check back when the season schedule is live
           </div>
         )}
 
         {/* Match Analysis */}
-        {prediction && nextMatch && (
+        {hasPrediction && (
           <MatchAnalysis
-            opponent={nextMatch.opponent}
-            venue={nextMatch.venue}
-            date={nextMatch.date}
+            opponent={selected.opponent}
+            venue={selected.venue}
+            date={selected.date}
           />
         )}
 
@@ -125,6 +146,14 @@ export default function Dashboard() {
           ) : commentary.data?.message ? (
             <div className="text-center py-6">
               <p className="text-muted-foreground">{commentary.data.message}</p>
+              {nextMatch && (
+                <button
+                  onClick={() => selectMatch(nextMatch)}
+                  className="mt-4 text-sm text-primary hover:underline"
+                >
+                  Next: {nextMatch.opponent} ({formatDate(nextMatch.date)}) →
+                </button>
+              )}
             </div>
           ) : commentary.data && !commentary.data.message ? (
             <div className="text-center space-y-2">
@@ -148,27 +177,41 @@ export default function Dashboard() {
 
         {/* Upcoming Fixtures */}
         <div className="glass-card p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-primary" />
-            <h3 className="text-lg font-semibold">Upcoming Fixtures</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-primary" />
+              <h3 className="text-lg font-semibold">Upcoming Fixtures</h3>
+            </div>
+            <button
+              onClick={() => navigate('/fixtures')}
+              className="text-xs text-primary hover:underline"
+            >
+              Full season →
+            </button>
           </div>
-          {fixtureLoading ? (
+          {season.loading ? (
             <CardSkeleton className="!p-0 !border-0 !shadow-none !bg-transparent !backdrop-blur-none" />
           ) : upcomingFixtures.length > 0 ? (
             <div className="space-y-2">
-              {upcomingFixtures.map((fix) => (
+              {upcomingFixtures.slice(0, 8).map((fix) => (
                 <button
-                  key={fix.date + fix.opponent}
-                  onClick={() => predictMatch(fix)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
-                    nextMatch?.date === fix.date && nextMatch?.opponent === fix.opponent
+                  key={fix.matchday}
+                  onClick={() => selectMatch(fix)}
+                  className={cn(
+                    'w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors',
+                    selected?.matchday === fix.matchday
                       ? 'bg-primary/10 border border-primary/30'
                       : 'bg-muted/20 hover:bg-muted/40'
-                  }`}
+                  )}
                 >
-                  <div>
-                    <p className="text-sm font-medium">{fix.opponent}</p>
-                    <p className="text-xs text-muted-foreground">{fix.venue}</p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-data text-muted-foreground bg-muted/40 rounded px-1.5 py-0.5">
+                      MD{fix.matchday}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium">{fix.opponent}</p>
+                      <p className="text-xs text-muted-foreground">{fix.venue}</p>
+                    </div>
                   </div>
                   <span className="text-xs text-muted-foreground font-data">{formatDate(fix.date)}</span>
                 </button>
@@ -176,6 +219,46 @@ export default function Dashboard() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">No upcoming fixtures</p>
+          )}
+        </div>
+
+        {/* Recent Results */}
+        <div className="glass-card p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-primary" />
+            <h3 className="text-lg font-semibold">Recent Results</h3>
+          </div>
+          {results.loading ? (
+            <CardSkeleton className="!p-0 !border-0 !shadow-none !bg-transparent !backdrop-blur-none" />
+          ) : results.data?.results.length ? (
+            <div className="space-y-2">
+              {results.data.results.map((r) => (
+                <div
+                  key={r.date + r.opponent}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/20"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className={cn(
+                      'w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold font-data',
+                      r.result === 'W' && 'bg-win/20 text-win',
+                      r.result === 'D' && 'bg-draw/20 text-draw',
+                      r.result === 'L' && 'bg-loss/20 text-loss',
+                    )}>
+                      {r.result}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium">vs {r.opponent}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(r.date)} · {r.venue}</p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-data font-semibold">{r.score}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No finished matches yet — connect API-Football to see live results
+            </p>
           )}
         </div>
 

@@ -1,21 +1,16 @@
 # File: tests/test_prediction.py
 """Unit tests for the prediction module."""
 
-import json
-import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import numpy as np
 import pytest
 
 from app.prediction.mappings import (
     get_opponent_code,
     get_venue_code,
     get_known_opponents,
-    load_mappings,
-    _opponent_mapping,
 )
-from app.prediction.features import build_feature_vector, ROLLING_COLS
+from app.prediction.features import ROLLING_COLS, build_feature_vector
 from app.prediction.model import load_model, get_model
 
 
@@ -29,18 +24,27 @@ def mock_mappings(tmp_path):
 
     m._opponent_mapping = {"Barcelona": 4, "Sevilla": 23}
     m._venue_mapping = {"Away": 0, "Home": 1}
+    m.reset_unknown_codes()
     yield
     m._opponent_mapping = None
     m._venue_mapping = None
+    m.reset_unknown_codes()
 
 
 def test_get_opponent_code_valid():
     assert get_opponent_code("Barcelona") == 4
 
 
-def test_get_opponent_code_invalid():
-    with pytest.raises(ValueError, match="Unknown opponent"):
-        get_opponent_code("Manchester United")
+def test_get_opponent_code_unknown_gets_stable_fallback():
+    """New-season opponents get a deterministic code beyond the trained range."""
+    first = get_opponent_code("Málaga")
+    second = get_opponent_code("Málaga")
+    assert first == second
+    assert first > 23  # beyond every trained code
+
+
+def test_get_opponent_code_unknown_different_names_distinct():
+    assert get_opponent_code("Málaga") != get_opponent_code("Racing Santander")
 
 
 def test_get_venue_code_home():
@@ -69,28 +73,59 @@ def test_build_feature_vector(db_session):
     from app.models import TeamStats
 
     # Seed team_stats
-    db_session.add(TeamStats(
-        team_name="Real Madrid",
-        gf_rolling=2.0, ga_rolling=0.8, sh_rolling=15.0, sot_rolling=5.0,
-        dist_rolling=18.0, fk_rolling=0.5, pk_rolling=0.1, pkatt_rolling=0.1,
-    ))
-    db_session.add(TeamStats(
-        team_name="Barcelona",
-        gf_rolling=1.8, ga_rolling=1.0, sh_rolling=14.0, sot_rolling=4.5,
-        dist_rolling=19.0, fk_rolling=0.3, pk_rolling=0.0, pkatt_rolling=0.0,
-    ))
+    db_session.add(
+        TeamStats(
+            team_name="Real Madrid",
+            gf_rolling=2.0,
+            ga_rolling=0.8,
+            sh_rolling=15.0,
+            sot_rolling=5.0,
+            dist_rolling=18.0,
+            fk_rolling=0.5,
+            pk_rolling=0.1,
+            pkatt_rolling=0.1,
+            xg_rolling=1.9,
+            xga_rolling=0.9,
+            poss_rolling=58.0,
+        )
+    )
+    db_session.add(
+        TeamStats(
+            team_name="Barcelona",
+            gf_rolling=1.8,
+            ga_rolling=1.0,
+            sh_rolling=14.0,
+            sot_rolling=4.5,
+            dist_rolling=19.0,
+            fk_rolling=0.3,
+            pk_rolling=0.0,
+            pkatt_rolling=0.0,
+            xg_rolling=1.6,
+            xga_rolling=1.1,
+            poss_rolling=55.0,
+        )
+    )
     db_session.commit()
 
     features = build_feature_vector("Barcelona", "Home", "2025-04-13", db_session)
-    assert features.shape == (1, 20)
+    assert features.shape == (1, 26)
     assert features["venue_code"].iloc[0] == 1  # Home
     assert features["opp_code"].iloc[0] == 4  # Barcelona
+    assert list(features.columns) == [
+        "venue_code",
+        "opp_code",
+        "hour",
+        "day_code",
+        *ROLLING_COLS,
+        *[f"opp_{c}" for c in ROLLING_COLS],
+    ]
 
 
 def test_build_feature_vector_unknown_team(db_session):
     """Missing team_stats for the opponent should raise ValueError."""
     # No team_stats seeded in this test — db is clean
     from app.models import TeamStats
+
     assert db_session.get(TeamStats, "Barcelona") is None
     with pytest.raises(ValueError, match="No rolling stats found"):
         build_feature_vector("Barcelona", "Home", "2025-04-13", db_session)

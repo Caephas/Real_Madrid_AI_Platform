@@ -3,28 +3,17 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.prediction.features import build_feature_vector, _get_team_rolling, _normalize_team_name, ROLLING_COLS
+from app.prediction.features import build_feature_vector, _get_team_rolling
 from app.prediction.mappings import get_known_opponents
 from app.prediction.model import get_model
 
 router = APIRouter()
 logger = logging.getLogger("app.prediction")
-
-STAT_LABELS = {
-    "gf_rolling": ("Goals Scored", "goals/game"),
-    "ga_rolling": ("Goals Conceded", "goals/game"),
-    "sh_rolling": ("Shots", "shots/game"),
-    "sot_rolling": ("Shots on Target", "shots/game"),
-    "dist_rolling": ("Avg Shot Distance", "yards"),
-    "fk_rolling": ("Free Kick Goals", "goals/game"),
-    "pk_rolling": ("Penalties Scored", "goals/game"),
-    "pkatt_rolling": ("Penalty Attempts", "attempts/game"),
-}
 
 
 class PredictRequest(BaseModel):
@@ -41,6 +30,7 @@ class PredictResponse(BaseModel):
 
 class TeamForm(BaseModel):
     """Human-readable rolling stats for one team."""
+
     team: str
     goals_scored: float
     goals_conceded: float
@@ -57,12 +47,36 @@ class AnalysisResponse(BaseModel):
     ai_narrative: str
 
 
+class FixtureInfo(BaseModel):
+    matchday: int
+    date: str
+    opponent: str
+    venue: str
+    kickoff: str | None = None
+    api_source: bool = False
+    status: str | None = None
+    result: str | None = None
+    score: str | None = None
+
+
+class SeasonResponse(BaseModel):
+    season: str
+    competition: str
+    start_date: str | None = None
+    end_date: str | None = None
+    next_match: FixtureInfo | None = None
+    fixtures: list[FixtureInfo]
+
+
 @router.post("/predict", response_model=PredictResponse)
 def predict_match(req: PredictRequest, db: Session = Depends(get_db)):
     """Predict Win/Draw/Loss probabilities for a Real Madrid match."""
     try:
         features = build_feature_vector(
-            opponent=req.opponent, venue=req.venue, date=req.date, db=db,
+            opponent=req.opponent,
+            venue=req.venue,
+            date=req.date,
+            db=db,
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -83,7 +97,10 @@ def predict_with_analysis(req: PredictRequest, db: Session = Depends(get_db)):
     # Run prediction
     try:
         features = build_feature_vector(
-            opponent=req.opponent, venue=req.venue, date=req.date, db=db,
+            opponent=req.opponent,
+            venue=req.venue,
+            date=req.date,
+            db=db,
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -121,7 +138,9 @@ def predict_with_analysis(req: PredictRequest, db: Session = Depends(get_db)):
     key_factors = _derive_key_factors(rm_stats, opp_stats, req.opponent, req.venue)
 
     # Generate LLM narrative
-    ai_narrative = _generate_narrative(prediction, rm_form, opp_form, key_factors, req.venue, req.date)
+    ai_narrative = _generate_narrative(
+        prediction, rm_form, opp_form, key_factors, req.venue, req.date
+    )
 
     return AnalysisResponse(
         prediction=prediction,
@@ -138,42 +157,62 @@ def _derive_key_factors(rm: dict, opp: dict, opponent: str, venue: str) -> list[
 
     # Scoring comparison
     if rm["gf_rolling"] > opp["gf_rolling"] + 0.3:
-        factors.append(f"Real Madrid are outscoring {opponent} ({rm['gf_rolling']:.1f} vs {opp['gf_rolling']:.1f} goals/game)")
+        factors.append(
+            f"Real Madrid are outscoring {opponent} ({rm['gf_rolling']:.1f} vs {opp['gf_rolling']:.1f} goals/game)"
+        )
     elif opp["gf_rolling"] > rm["gf_rolling"] + 0.3:
-        factors.append(f"{opponent} are outscoring Real Madrid ({opp['gf_rolling']:.1f} vs {rm['gf_rolling']:.1f} goals/game)")
+        factors.append(
+            f"{opponent} are outscoring Real Madrid ({opp['gf_rolling']:.1f} vs {rm['gf_rolling']:.1f} goals/game)"
+        )
 
     # Defensive comparison
     if rm["ga_rolling"] < opp["ga_rolling"] - 0.3:
-        factors.append(f"Real Madrid have the tighter defense ({rm['ga_rolling']:.1f} vs {opp['ga_rolling']:.1f} conceded/game)")
+        factors.append(
+            f"Real Madrid have the tighter defense ({rm['ga_rolling']:.1f} vs {opp['ga_rolling']:.1f} conceded/game)"
+        )
     elif opp["ga_rolling"] < rm["ga_rolling"] - 0.3:
-        factors.append(f"{opponent} have the tighter defense ({opp['ga_rolling']:.1f} vs {rm['ga_rolling']:.1f} conceded/game)")
+        factors.append(
+            f"{opponent} have the tighter defense ({opp['ga_rolling']:.1f} vs {rm['ga_rolling']:.1f} conceded/game)"
+        )
 
     # Shot efficiency
     rm_eff = rm["sot_rolling"] / max(rm["sh_rolling"], 1)
     opp_eff = opp["sot_rolling"] / max(opp["sh_rolling"], 1)
     if rm_eff > opp_eff + 0.05:
-        factors.append(f"Real Madrid are more clinical ({rm_eff:.0%} shot accuracy vs {opp_eff:.0%})")
+        factors.append(
+            f"Real Madrid are more clinical ({rm_eff:.0%} shot accuracy vs {opp_eff:.0%})"
+        )
     elif opp_eff > rm_eff + 0.05:
-        factors.append(f"{opponent} are more clinical ({opp_eff:.0%} shot accuracy vs {rm_eff:.0%})")
+        factors.append(
+            f"{opponent} are more clinical ({opp_eff:.0%} shot accuracy vs {rm_eff:.0%})"
+        )
 
     # Shot volume
     if rm["sh_rolling"] > opp["sh_rolling"] + 2:
-        factors.append(f"Real Madrid create more chances ({rm['sh_rolling']:.0f} vs {opp['sh_rolling']:.0f} shots/game)")
+        factors.append(
+            f"Real Madrid create more chances ({rm['sh_rolling']:.0f} vs {opp['sh_rolling']:.0f} shots/game)"
+        )
     elif opp["sh_rolling"] > rm["sh_rolling"] + 2:
-        factors.append(f"{opponent} create more chances ({opp['sh_rolling']:.0f} vs {rm['sh_rolling']:.0f} shots/game)")
+        factors.append(
+            f"{opponent} create more chances ({opp['sh_rolling']:.0f} vs {rm['sh_rolling']:.0f} shots/game)"
+        )
 
     # Home/away
     if venue == "Home":
         factors.append("Home advantage at the Bernabéu")
     else:
-        factors.append(f"Away fixture — historically harder for Real Madrid")
+        factors.append("Away fixture — historically harder for Real Madrid")
 
     return factors[:5]
 
 
 def _generate_narrative(
-    pred: PredictResponse, rm: TeamForm, opp: TeamForm,
-    factors: list[str], venue: str, date: str,
+    pred: PredictResponse,
+    rm: TeamForm,
+    opp: TeamForm,
+    factors: list[str],
+    venue: str,
+    date: str,
 ) -> str:
     """Use the LLM to generate a tactical match analysis narrative."""
     try:
@@ -194,9 +233,13 @@ Key statistical factors: {'; '.join(factors)}
 Analyze why these probabilities make sense given the stats and what you know about these teams in La Liga. End with a predicted scoreline. No markdown. No bullet points. English only."""
 
         provider = create_provider()
-        response = provider.generate([
-            {"role": "user", "content": prompt}
-        ])
+        response = ""
+        for attempt in range(2):
+            response = provider.generate([{"role": "user", "content": prompt}])
+            if response.strip():
+                break
+            # Reasoning-heavy models occasionally emit an empty final message.
+            prompt = f"{prompt}\n\nYour previous response was empty. Write the analysis now."
         return response.strip()
     except Exception as e:
         logger.warning("LLM analysis generation failed: %s", e)
@@ -209,18 +252,33 @@ def list_opponents():
     return {"opponents": get_known_opponents()}
 
 
-@router.get("/next-match")
+@router.get("/next-match", response_model=FixtureInfo | None)
 def next_match():
     """Return the next upcoming Real Madrid La Liga fixture."""
     from app.fixtures import get_next_match
-    result = get_next_match()
-    if result is None:
-        return {"message": "No upcoming fixtures — season is over"}
-    return result
+
+    return get_next_match()
 
 
-@router.get("/fixtures")
+@router.get("/fixtures", response_model=dict)
 def remaining_fixtures():
     """Return all remaining Real Madrid La Liga fixtures."""
     from app.fixtures import get_remaining_fixtures
+
     return {"fixtures": get_remaining_fixtures()}
+
+
+@router.get("/season", response_model=SeasonResponse)
+def season_info():
+    """Return current-season metadata, next match, and the full fixture list."""
+    from app.fixtures import get_season_info
+
+    return get_season_info()
+
+
+@router.get("/results", response_model=dict)
+def recent_results(limit: int = Query(5, ge=1, le=10)):
+    """Return recent finished Real Madrid matches with scores."""
+    from app.fixtures import get_recent_results
+
+    return {"results": get_recent_results(limit=limit)}

@@ -4,6 +4,7 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
@@ -12,7 +13,13 @@ from app.main import app
 @pytest.fixture
 def test_engine():
     """Create an in-memory SQLite engine per test — full isolation."""
-    engine = create_engine("sqlite:///:memory:")
+    # StaticPool + check_same_thread=False lets the TestClient's worker
+    # threads share the single in-memory connection (needed for SSE streams).
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(bind=engine)
     yield engine
     Base.metadata.drop_all(bind=engine)

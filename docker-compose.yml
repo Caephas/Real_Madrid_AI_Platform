@@ -46,6 +46,9 @@ services:
     environment:
       DATABASE_URL: postgresql://rmadmin:${DB_PASSWORD}@db:5432/real_madrid
       LLM_PROVIDER: ${LLM_PROVIDER}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL}
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
@@ -59,8 +62,6 @@ services:
       - "8000:8000"
     depends_on:
       db:
-        condition: service_healthy
-      ollama:
         condition: service_healthy
 
 volumes:

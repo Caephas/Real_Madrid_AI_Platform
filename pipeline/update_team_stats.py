@@ -23,16 +23,17 @@ from sqlalchemy.orm import sessionmaker
 from app.config import settings
 from app.database import Base
 from app.models import TeamStats
+from app.prediction.features import STAT_COLS, normalize_team_name
 
 
 ROLLING_WINDOW = 5
-STAT_COLS = ["gf", "ga", "sh", "sot", "dist", "fk", "pk", "pkatt"]
 
 
 def _compute_latest_rolling(input_path: str) -> pd.DataFrame:
     """Compute the most recent rolling average per team from raw data."""
     matches = pd.read_csv(input_path)
     matches["date"] = pd.to_datetime(matches["date"])
+    matches["team"] = matches["team"].map(normalize_team_name)
 
     rows = []
     for team_name, group in matches.groupby("team"):
@@ -67,11 +68,13 @@ def update_team_stats(input_path: str) -> None:
                 setattr(existing, f"{col}_rolling", row[f"{col}_rolling"])
             existing.updated_at = now
         else:
-            session.add(TeamStats(
-                team_name=row["team_name"],
-                **{f"{col}_rolling": row[f"{col}_rolling"] for col in STAT_COLS},
-                updated_at=now,
-            ))
+            session.add(
+                TeamStats(
+                    team_name=row["team_name"],
+                    **{f"{col}_rolling": row[f"{col}_rolling"] for col in STAT_COLS},
+                    updated_at=now,
+                )
+            )
         upserted += 1
 
     session.commit()
@@ -80,7 +83,9 @@ def update_team_stats(input_path: str) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Update team_stats table with latest rolling averages")
+    parser = argparse.ArgumentParser(
+        description="Update team_stats table with latest rolling averages"
+    )
     parser.add_argument(
         "--input",
         type=str,

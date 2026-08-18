@@ -2,6 +2,8 @@ import { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, LiveMatchData } from '@/api/client';
 import { usePolling } from '@/hooks/usePolling';
+import { useApi } from '@/hooks/useApi';
+import { useCountdown, fixtureTargetIso } from '@/hooks/useCountdown';
 import { EventTimeline } from '@/components/EventTimeline';
 import { CardSkeleton } from '@/components/LoadingSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
@@ -11,6 +13,9 @@ export default function LiveMatch() {
   const navigate = useNavigate();
   const fetcher = useCallback(() => api.getCommentary(541), []);
   const { data, loading, error, lastUpdated, refetch } = usePolling<LiveMatchData>(fetcher, 30000);
+  const season = useApi(() => api.getSeason(), []);
+  const nextMatch = season.data?.next_match ?? null;
+  const countdown = useCountdown(nextMatch ? fixtureTargetIso(nextMatch) : null);
   const [secondsAgo, setSecondsAgo] = useState(0);
 
   useEffect(() => {
@@ -62,11 +67,24 @@ export default function LiveMatch() {
           <Radio className="w-12 h-12 mx-auto text-muted-foreground" />
           <h2 className="text-xl font-semibold">No Live Match Right Now</h2>
           <p className="text-muted-foreground">Check back when Real Madrid are playing</p>
+          {nextMatch && !countdown.isPast && (
+            <div className="inline-flex flex-col items-center gap-1 bg-muted/20 rounded-xl px-8 py-4 border border-border/40">
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wider">
+                Next up · MD {nextMatch.matchday} · {nextMatch.venue}
+              </span>
+              <span className="text-xl font-bold">
+                {nextMatch.opponent}
+              </span>
+              <span className="text-2xl font-bold font-data text-primary">
+                {countdown.days}d {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
+              </span>
+            </div>
+          )}
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/fixtures')}
             className="bg-primary text-primary-foreground rounded-lg px-6 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors mt-2"
           >
-            Predict Next Match →
+            View Season Fixtures →
           </button>
         </div>
       ) : data ? (

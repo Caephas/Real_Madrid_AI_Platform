@@ -9,13 +9,12 @@ help: ## Show this help
 
 # ---------- Setup ----------
 
-setup: ## First-time setup: start containers, pull LLM model
-	docker compose up -d db ollama
-	@echo "Waiting for Ollama to be ready..."
-	@sleep 5
-	docker exec rm-ollama ollama pull llama3.2
-	docker compose up -d app
-	@echo "Setup complete. Backend: http://localhost:8000"
+setup: ## First-time setup: start DB, run migrations, install deps
+	docker compose up -d db
+	@sleep 3
+	alembic upgrade head
+	pip install -e ".[dev]"
+	@echo "Setup complete. Backend: http://localhost:8000 (DeepSeek LLM by default)"
 
 # ---------- Development ----------
 
@@ -31,8 +30,9 @@ start: ## Start everything: db + backend + frontend (single command)
 	@sleep 2
 	cd frontend && npm run dev
 
-dev: ## Start db + ollama, run backend locally with hot reload
-	docker compose up -d db ollama
+dev: ## Start db (and ollama if LLM_PROVIDER=ollama), run backend locally with hot reload
+	docker compose up -d db
+	@if [ "$${LLM_PROVIDER:-deepseek}" = "ollama" ]; then docker compose up -d ollama; fi
 	uvicorn app.main:app --reload --port 8000
 
 dev-all: ## Start all services (containerized)
@@ -62,6 +62,9 @@ pipeline: ## Run the full data pipeline: scrape → clean → train → update s
 	python3 -m pipeline.clean --input data/raw/ --output data/processed/
 	python3 -m pipeline.train --input data/processed/ --output models/
 	python3 -m pipeline.update_team_stats --input data/raw/la_liga_10_seasons.csv
+
+fetch-season: ## Fetch the latest season from football-data.co.uk (no key needed) and merge
+	python3 -m pipeline.fetch_season --merge
 
 pipeline-train: ## Train model only (assumes cleaned data exists)
 	python3 -m pipeline.train --input data/processed/ --output models/

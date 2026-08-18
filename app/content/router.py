@@ -1,7 +1,7 @@
 # File: app/content/router.py
 """Content endpoints: articles listing, manual fetch trigger, and recommendations."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 

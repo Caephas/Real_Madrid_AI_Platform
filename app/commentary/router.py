@@ -3,12 +3,9 @@
    GET /next-fixture — next scheduled match from API-Football.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
-from app.config import settings
-from app.database import get_db
 from app.commentary.api_football import get_live_events, get_next_fixture
 from app.commentary.generator import generate_match_summary
 

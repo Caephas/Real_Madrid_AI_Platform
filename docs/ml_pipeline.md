@@ -10,6 +10,8 @@
 flowchart LR
     subgraph "Offline Pipeline (run once)"
         A[fbref.com] -->|scrape.py| B[Raw CSV]
+        F[football-data.co.uk] -->|fetch_season.py| B
+        G[API-Football] -->|fetch_season.py| B
         B -->|clean.py| C[Feature-Engineered CSV]
         C -->|train.py| D[Trained Models + Mappings]
         B -->|update_team_stats.py| E[(PostgreSQL team_stats)]
@@ -29,15 +31,28 @@ flowchart LR
 
 ---
 
-## Step 1: Data Scraping
+## Step 1: Data Collection
 
 **File:** [scrape.py](file:///Users/caephas/Downloads/side-projects/Real_Madrid_AI_Platform/pipeline/scrape.py)
 
-**Source:** [fbref.com](https://fbref.com) — the most comprehensive free source for match-level football stats.
+**Files:** [scrape.py](file:///Users/caephas/Downloads/side-projects/Real_Madrid_AI_Platform/pipeline/scrape.py) · [fetch_season.py](file:///Users/caephas/Downloads/side-projects/Real_Madrid_AI_Platform/pipeline/fetch_season.py)
+
+**Sources, in priority order:**
+
+1. **[football-data.co.uk](https://www.football-data.co.uk)** — no key, works
+   from any network, complete seasons. Provides results, goals, shots, and
+   shots-on-target; missing advanced stats (xG, possession, shot distance,
+   FK goals, penalties) are filled with league-average priors from the
+   historical dataset.
+2. **[fbref.com](https://fbref.com)** — the gold standard for match-level
+   stats (real xG, possession, shooting). Blocked on some networks; resumable
+   checkpoints make partial runs safe.
+3. **API-Football** — full statistics when a season is covered by the key.
 
 **What it scrapes:**
 
-For every La Liga team, across seasons 2018–2025:
+For every La Liga team, across ~10 seasons ending in the current year
+(2017/18 → 2026/27 automatically):
 
 | Table | Fields Extracted |
 |-------|-----------------|
@@ -52,7 +67,12 @@ For every La Liga team, across seasons 2018–2025:
 4. Merges the two tables on `Date`
 5. Filters to La Liga matches only (excludes Champions League, Copa del Rey)
 6. Navigates to **previous season** via the "prev" link
-7. Repeats for 7 seasons
+7. Repeats until the configured end year
+
+**Resilience:** every team-season is checkpointed to `data/raw/partial/<season>/`
+as it completes, so an interrupted run resumes from where it stopped
+(`--force` re-scrapes). Failed teams are logged and skipped rather than
+aborting the whole run.
 
 **Rate limiting:** fbref allows ~6 requests/minute. The scraper waits 10 seconds between requests with exponential backoff on failures (3 retries).
 
@@ -66,7 +86,7 @@ For every La Liga team, across seasons 2018–2025:
 
 **File:** [clean.py](file:///Users/caephas/Downloads/side-projects/Real_Madrid_AI_Platform/pipeline/clean.py)
 
-This is the most critical step — it transforms raw match results into the 20-dimensional feature vector the model consumes.
+This is the most critical step — it transforms raw match results into the **26-dimensional feature vector** the model consumes. The feature list is imported from `app/prediction/features.py`, the same module used at inference time, so training and serving can never drift.
 
 ### 2.1 Categorical Encoding
 
@@ -80,7 +100,7 @@ team_mapping.json:     {"Alavés": 0, ..., "Villarreal": 26}
 
 ### 2.2 Rolling Averages (Core Innovation)
 
-For each team's match history, compute a **5-game rolling mean** of 8 stat columns:
+For each team's match history, compute a **5-game rolling mean** of 11 stat columns:
 
 | Stat | Rolling Column | Meaning |
 |------|---------------|---------|
@@ -92,6 +112,9 @@ For each team's match history, compute a **5-game rolling mean** of 8 stat colum
 | fk | fk_rolling | Avg free kicks in last 5 |
 | pk | pk_rolling | Avg penalties scored in last 5 |
 | pkatt | pkatt_rolling | Avg penalty attempts in last 5 |
+| xg | xg_rolling | Avg expected goals in last 5 |
+| xga | xga_rolling | Avg expected goals against in last 5 |
+| poss | poss_rolling | Avg possession % in last 5 |
 
 > [!IMPORTANT]
 > **Leakage prevention:** `closed='left'` excludes the current match row from the rolling window. Without this, the model would see information from the future (the match it's predicting).
@@ -105,7 +128,7 @@ matches_rolling ⟕ matches_rolling
 ON (left.opp_code = right.team_code AND left.date = right.date)
 ```
 
-Result: 8 additional `opp_*_rolling` columns → **16 rolling features total**.
+Result: 11 additional `opp_*_rolling` columns → **22 rolling features total**.
 
 ### 2.4 Time Features
 
@@ -122,24 +145,26 @@ Three-class classification: Win, Draw, Loss.
 
 ### 2.6 Train/Test Split
 
-**Temporal split at January 1, 2024** (not random):
+**Temporal split: the last N seasons (default 2) are held out as test** (not random):
 
 | Set | Date Range | Purpose |
 |-----|-----------|---------|
-| Train | < 2024-01-01 | Model fitting (only Real Madrid rows) |
-| Test | ≥ 2024-01-01 | Evaluation (only Real Madrid rows) |
+| Train | All but the last 2 seasons | Model fitting (only Real Madrid rows) |
+| Test | Last 2 seasons (e.g. 2024, 2025) | Evaluation (only Real Madrid rows) |
 
 > [!IMPORTANT]
 > Random splits would cause **temporal leakage** — a match in the test set could have rolling averages computed from future matches that ended up in the training set.
 
-### 2.7 Final Feature Vector (20 dimensions)
+### 2.7 Final Feature Vector (26 dimensions)
 
 ```
 [venue_code, opp_code, hour, day_code,
  gf_rolling, ga_rolling, sh_rolling, sot_rolling,
  dist_rolling, fk_rolling, pk_rolling, pkatt_rolling,
+ xg_rolling, xga_rolling, poss_rolling,
  opp_gf_rolling, opp_ga_rolling, opp_sh_rolling, opp_sot_rolling,
- opp_dist_rolling, opp_fk_rolling, opp_pk_rolling, opp_pkatt_rolling]
+ opp_dist_rolling, opp_fk_rolling, opp_pk_rolling, opp_pkatt_rolling,
+ opp_xg_rolling, opp_xga_rolling, opp_poss_rolling]
 ```
 
 **Output files:**
@@ -147,8 +172,9 @@ Three-class classification: Win, Draw, Loss.
 ```
 data/processed/
 ├── cleaned_laliga_matches.csv   # All teams, all features
-├── train.csv                     # RM-only, pre-2024
-├── test.csv                      # RM-only, 2024+
+├── train.csv                     # RM-only, earlier seasons
+├── test.csv                      # RM-only, last 2 seasons
+├── metadata.json                 # features, split info, coverage snapshot
 ├── opponent_mapping.json
 ├── venue_mapping.json
 └── team_mapping.json
@@ -173,19 +199,21 @@ After SMOTE:  {2: 120, 1: 120, 0: 120}
 
 | Model | Config | Strength |
 |-------|--------|----------|
-| **XGBoost** | 200 trees, depth 6, learning_rate 0.1, softmax objective | Gradient boosting; captures complex interactions |
-| **Random Forest** | 200 trees, min_samples_split 3 | Robust to overfitting; more stable |
+| **XGBoost** | 500 trees (early stopping on holdout), depth 6, learning_rate 0.08, softmax objective | Gradient boosting; captures complex interactions |
+| **Random Forest** | 400 trees, min_samples_split 3 | Robust to overfitting; more stable |
 
 Both use `random_state=42` for reproducibility.
 
 ### 3.3 Evaluation
 
-- **Test accuracy** on the temporal holdout set
+- **Test accuracy + log loss** on the temporal holdout set
 - **5-fold stratified cross-validation** on training data
 - **Classification report** (precision, recall, F1 per class)
 - **Feature importance** ranking (XGBoost)
 
-The model with the highest test accuracy is identified as "best," though both are saved.
+The model with the **lowest test log loss** (accuracy as tiebreak) is identified
+as "best" — log loss rewards well-calibrated probabilities, which matters for
+W/D/L betting-style outputs more than raw accuracy. Both models are saved.
 
 ### 3.4 Outputs
 
@@ -193,9 +221,15 @@ The model with the highest test accuracy is identified as "best," though both ar
 models/
 ├── rf_model.pkl              # Random Forest (default at inference)
 ├── xgboost_model.pkl         # XGBoost (fallback)
+├── model_metrics.json        # accuracy, log loss, CV, reports, provenance
+├── feature_importance.json   # all 26 features ranked
 ├── opponent_mapping.json     # Copied from data/processed/
 └── venue_mapping.json        # Copied from data/processed/
 ```
+
+`model_metrics.json` records when the model was trained, the data date range,
+the test seasons, and per-model metrics — handy for tracking model drift
+across retrains.
 
 ---
 

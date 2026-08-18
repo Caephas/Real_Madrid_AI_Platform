@@ -76,4 +76,19 @@ class TeamStats(Base):
     fk_rolling: Mapped[float] = mapped_column(Float, default=0.0)
     pk_rolling: Mapped[float] = mapped_column(Float, default=0.0)
     pkatt_rolling: Mapped[float] = mapped_column(Float, default=0.0)
+    xg_rolling: Mapped[float] = mapped_column(Float, default=0.0)
+    xga_rolling: Mapped[float] = mapped_column(Float, default=0.0)
+    poss_rolling: Mapped[float] = mapped_column(Float, default=0.0)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class ChatMessage(Base):
+    """Persistent chatbot conversation history."""
+
+    __tablename__ = "chat_messages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    conversation_id: Mapped[str] = mapped_column(String(100), index=True)
+    role: Mapped[str] = mapped_column(String(20))
+    content: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

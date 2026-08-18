@@ -28,7 +28,9 @@ def load_model(model_name: str = "rf_model.pkl") -> object:
         if alt.exists():
             path = alt
         else:
-            raise FileNotFoundError(f"No model found in {settings.model_dir}. Run `make pipeline` first.")
+            raise FileNotFoundError(
+                f"No model found in {settings.model_dir}. Run `make pipeline` first."
+            )
     _model = joblib.load(path)
     return _model
 

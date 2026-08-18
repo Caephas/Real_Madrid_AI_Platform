@@ -1,347 +1,171 @@
 # Real Madrid AI Platform — System Design
 
+> Architecture, data model, and operational design for the platform.
+> Refreshed for the 2026/27 season: DeepSeek LLM, 26-feature model,
+> full season hub, and a multi-source data pipeline.
+
+---
+
 ## 1. System Context
 
-An AI-powered platform for Real Madrid fans. Four capabilities: agentic chatbot, match outcome prediction, live commentary, and personalized news. Runs **fully local** via Docker containers — zero cloud dependency.
-
 ```mermaid
-graph TB
-    subgraph Actors
-        FAN["Fan (Browser)"]
-        DEV["Developer / Operator"]
-    end
+flowchart LR
+    FAN["Fan<br/>(browser)"]
+    SYS["Real Madrid AI Platform"]
+    DSK["DeepSeek API"]
+    AFB["API-Football"]
+    RSS["Managing Madrid RSS"]
+    FD["football-data.co.uk"]
+    FBREF["fbref.com"]
 
-    subgraph "Real Madrid AI Platform (Docker Compose)"
-        API["FastAPI Backend<br/>(Docker Container)"]
-        DB["PostgreSQL<br/>(Docker Container)"]
-        LLM["Ollama<br/>(Docker Container)"]
-    end
-
-    subgraph "External APIs (optional)"
-        GEM["Gemini API<br/>(optional remote LLM)"]
-        AF["API-Football<br/>(Live Match Data)"]
-        RSS["Managing Madrid RSS<br/>(News Articles)"]
-        FB["fbref.com<br/>(Historical Stats)"]
-    end
-
-    FAN -->|"HTTP"| API
-    DEV -->|"CLI: pipeline, docker-compose"| API
-    API --> DB
-    API --> LLM
-    API -.->|"optional"| GEM
-    API --> AF
-    API --> RSS
-    DEV -->|"scrape (offline)"| FB
+    FAN -->|"predict, chat, news, fixtures"| SYS
+    SYS -->|"LLM calls + tool results"| DSK
+    SYS -->|"live events & fixtures"| AFB
+    SYS -->|"article ingestion"| RSS
+    SYS -.->|"offline season fetch"| FD
+    SYS -.->|"offline full-fidelity scrape"| FBREF
 ```
+
+**Actors**
+
+- **Fan** — uses the SPA for predictions, chat, live commentary, news.
+- **Operator** — runs the offline pipeline (`make pipeline`), monitors
+  `GET /health`, retrains as seasons complete.
 
 ---
 
 ## 2. Container Diagram
 
 ```mermaid
-graph TB
-    subgraph "Docker Compose Network"
-        subgraph "app (port 8000)"
-            API["FastAPI + Uvicorn<br/>Backend Monolith"]
-            SCHED["APScheduler<br/>(RSS fetch every 6h)"]
-        end
-
-        subgraph "db (port 5432)"
-            PG["PostgreSQL 16<br/>match_events, articles,<br/>users, team_stats"]
-        end
-
-        subgraph "ollama (port 11434)"
-            OLL["Ollama Server<br/>llama3 / mistral"]
-        end
+flowchart TB
+    subgraph Client
+        SPA["Vite + React SPA<br/>:8080"]
     end
 
-    subgraph "Frontend (port 5173)"
-        FE["Vite + React<br/>(npm run dev or container)"]
+    subgraph Backend["FastAPI app :8000"]
+        API["REST + SSE endpoints"]
+        AGENT["Chatbot agent loop"]
+        PRED["Prediction service"]
+        FIX["Fixture/season service"]
+        COMM["Commentary service"]
+        CONT["Content service"]
     end
 
-    subgraph "External APIs"
-        AF["API-Football"]
-        RSS["RSS Feed"]
-    end
+    PG[("PostgreSQL 16<br/>:5432/5433")]
+    MODELS[("models/ volume")]
+    DSK["DeepSeek API"]
+    AFB["API-Football"]
+    RSS["RSS feed"]
 
-    subgraph "Local Filesystem (volumes)"
-        VOL_MODELS["./models/<br/>xgboost_model.pkl<br/>opponent_mapping.json<br/>venue_mapping.json"]
-        VOL_DATA["./data/<br/>raw + processed CSVs"]
-    end
-
-    FE -->|"HTTP"| API
-    API --> PG
-    API --> OLL
-    API -->|"read model files"| VOL_MODELS
-    API --> AF
-    API --> RSS
-    SCHED -.->|"trigger"| API
-
-    style API stroke:#0a0,stroke-width:3px
-    style PG stroke:#336,stroke-width:2px
-    style OLL stroke:#f60,stroke-width:2px
+    SPA -->|HTTP / SSE| API
+    API --> AGENT & PRED & FIX & COMM & CONT
+    AGENT --> DSK
+    AGENT --> PRED & COMM & CONT
+    PRED --> MODELS
+    PRED & COMM & CONT & AGENT --> PG
+    FIX --> AFB
+    COMM --> AFB
+    CONT --> RSS
 ```
 
-### Cost: **$0/mo** (runs on your machine)
+**Key decisions**
+
+- **Monolith FastAPI** with modular packages (`chatbot`, `prediction`,
+  `commentary`, `content`, `fixtures`) — appropriate for a single-host
+  personal platform; keeps ops trivial (one process).
+- **SSE streaming** for chat (`POST /chat/stream`) — token-by-token UX without
+  WebSocket complexity.
+- **PostgreSQL** for match events, articles, users, chat history, and live
+  team rolling stats (the prediction lookup table).
 
 ---
 
-## 3. Component Diagram (Backend)
+## 3. Backend Modules
 
 ```mermaid
-graph TB
-    subgraph "FastAPI Application"
-        MAIN["main.py<br/>(Uvicorn entrypoint,<br/>lifespan: scheduler + model warmup)"]
-        MW["middleware.py<br/>(CORS, request logging, errors)"]
-        CFG["config.py<br/>(Pydantic Settings)"]
-        DB_MOD["database.py<br/>(SQLAlchemy engine + session)"]
-
-        subgraph "chatbot/"
-            C_R["router.py<br/>POST /chat"]
-            C_A["agent.py<br/>tool-calling loop"]
-            C_LLM["llm_provider.py<br/>GeminiProvider | OllamaProvider"]
-            C_T["tools.py<br/>tool definitions + executor"]
-        end
-
-        subgraph "prediction/"
-            P_R["router.py<br/>POST /predict"]
-            P_M["model.py<br/>load from ./models/ volume"]
-            P_F["features.py<br/>feature vector builder"]
-            P_MAP["mappings.py<br/>opponent/venue code maps"]
-        end
-
-        subgraph "commentary/"
-            CO_R["router.py<br/>GET /commentary/{team_id}"]
-            CO_AF["api_football.py<br/>API client + retry"]
-            CO_G["generator.py<br/>event → text"]
-        end
-
-        subgraph "content/"
-            CN_R["router.py<br/>GET /articles<br/>GET /recommendations/{user_id}"]
-            CN_RSS["rss.py<br/>fetch + categorize"]
-            CN_DB["crud.py<br/>article/user CRUD via SQLAlchemy"]
-        end
+flowchart LR
+    subgraph app/
+        MAIN["main.py — lifespan, scheduler, health"]
+        CFG["config.py — Pydantic settings"]
+        DB["database.py — engine/session"]
+        MODELS["models.py — ORM"]
+        CHAT["chatbot/"]
+        PRED["prediction/"]
+        COMM["commentary/"]
+        CONT["content/"]
+        FIX["fixtures.py + fixtures JSON"]
     end
 
-    MAIN --> MW
-    MAIN --> C_R
-    MAIN --> P_R
-    MAIN --> CO_R
-    MAIN --> CN_R
-    MAIN --> DB_MOD
-    C_R --> C_A --> C_LLM
-    C_A --> C_T
-    C_T -.->|"tool: predict_match"| P_R
-    C_T -.->|"tool: get_live_commentary"| CO_R
-    C_T -.->|"tool: get_articles"| CN_R
-    C_T -.->|"tool: get_team_stats"| DB_MOD
-    P_R --> P_M
-    P_R --> P_F --> P_MAP
-    CN_DB --> DB_MOD
+    MAIN --> CHAT & PRED & COMM & CONT & FIX
+    CHAT --> PRED & COMM & CONT
+    CHAT & PRED & COMM & CONT --> DB --> MODELS
+    PRED --> FIX
 ```
 
----
-
-## 4. Agent Architecture
+### Chatbot agent loop
 
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant R as /chat Router
-    participant A as Agent Loop
-    participant LLM as Ollama / Gemini
-    participant T as Tool Executor
-    participant P as prediction/
-    participant CO as commentary/
-    participant CN as content/
+    participant R as /chat/stream
+    participant A as Agent loop
+    participant L as DeepSeek
+    participant T as Tools
 
-    U->>R: POST /chat {"prompt": "Will we beat Atletico?"}
-    R->>A: run_agent(prompt, tools)
-
-    loop Max 5 iterations
-        A->>LLM: chat(messages, tool_schemas)
-        LLM-->>A: tool_call: predict_match("Atletico Madrid", "home", "2025-04-20")
-        A->>T: execute("predict_match", args)
-        T->>P: predict(opponent, venue, date)
-        P-->>T: {"win": 0.62, "draw": 0.24, "loss": 0.14}
-        T-->>A: tool_result
-
-        A->>LLM: chat(messages + tool_result, tool_schemas)
-        LLM-->>A: tool_call: get_articles("Match Previews")
-        A->>T: execute("get_articles", args)
-        T->>CN: get_articles(category)
-        CN-->>T: [{"title": "Atletico preview..."}]
-        T-->>A: tool_result
-
-        A->>LLM: chat(messages + tool_results, tool_schemas)
-        LLM-->>A: final_text (no more tool calls)
+    U->>R: message + conversation_id
+    R->>A: run_agent_stream(history)
+    loop up to 5 iterations
+        A->>L: messages + tool definitions
+        alt tool call requested
+            L-->>A: tool_calls
+            A->>T: execute (predict/commentary/news/fixtures)
+            T-->>A: real data
+        else final answer
+            L-->>A: streamed deltas
+            A-->>R: delta events (SSE)
+        end
     end
-
-    A-->>R: "62% win probability. RM on a 5-game streak..."
-    R-->>U: {"response": "..."}
+    R-->>U: done + conversation_id
 ```
+
+- Conversation history is persisted in `chat_messages` and replayed into the
+  prompt (last 8 messages) so the agent remembers context.
+- Empty LLM responses (reasoning-heavy models) trigger one retry before
+  giving up — prevents blank answers.
+- Provider abstraction: `DeepSeekProvider` (default), `OllamaProvider`,
+  `GeminiProvider`, selected via `LLM_PROVIDER`.
 
 ---
 
-## 5. LLM Provider Swap
-
-```mermaid
-classDiagram
-    class LLMProvider {
-        <<Protocol>>
-        +chat(messages, tools) LLMResponse
-    }
-
-    class LLMResponse {
-        +text: str | None
-        +tool_calls: list~ToolCall~
-    }
-
-    class ToolCall {
-        +id: str
-        +name: str
-        +args: dict
-    }
-
-    class GeminiProvider {
-        -api_key: str
-        +chat(messages, tools) LLMResponse
-    }
-
-    class OllamaProvider {
-        -base_url: str
-        -model_name: str
-        +chat(messages, tools) LLMResponse
-    }
-
-    LLMProvider <|.. GeminiProvider : implements
-    LLMProvider <|.. OllamaProvider : implements
-    LLMResponse --> ToolCall
-```
-
-```
-LLM_PROVIDER=ollama  →  OllamaProvider(base_url="http://ollama:11434", model="llama3")
-LLM_PROVIDER=gemini  →  GeminiProvider(api_key=GEMINI_API_KEY)
-```
-
-Default: **Ollama** (fully local, no API key required).
-
----
-
-## 6. Data Pipeline
-
-```mermaid
-flowchart LR
-    subgraph "1. Scrape"
-        FB["fbref.com"] -->|"requests + BS4"| RAW["data/raw/<br/>la_liga.csv"]
-    end
-
-    subgraph "2. Clean"
-        RAW -->|"pipeline/clean.py"| PROC["data/processed/<br/>cleaned_laliga.csv"]
-    end
-
-    subgraph "3. Train"
-        PROC -->|"pipeline/train.py"| MODEL["models/<br/>xgboost_model.pkl"]
-        PROC -->|"pipeline/train.py"| MAPS["models/<br/>*_mapping.json"]
-        PROC -->|"pipeline/update_team_stats.py"| STATS["PostgreSQL<br/>team_stats table"]
-    end
-
-    subgraph "4. Serve"
-        MODEL -->|"volume mount"| API["FastAPI container<br/>loads on startup"]
-        MAPS -->|"volume mount"| API
-        STATS -->|"SQL query"| API
-    end
-
-    style MODEL stroke:#f90,stroke-width:2px
-    style API stroke:#0a0,stroke-width:2px
-```
-
-No S3 upload step. Model files are mounted directly into the container via Docker volumes.
-
----
-
-## 7. API Design
-
-| Method | Path | Module | Description |
-|--------|------|--------|-------------|
-| `POST` | `/chat` | chatbot | Agent processes prompt, may call tools |
-| `POST` | `/predict` | prediction | W/D/L probabilities for a match |
-| `GET` | `/commentary/{team_id}` | commentary | Live events + generated commentary |
-| `GET` | `/articles` | content | List articles, optional `?category=` |
-| `GET` | `/recommendations/{user_id}` | content | Personalized articles |
-| `GET` | `/health` | root | Health check (DB + Ollama connectivity) |
-
-### Request/Response Schemas
-
-```mermaid
-classDiagram
-    class ChatRequest {
-        +prompt: str
-    }
-    class ChatResponse {
-        +response: str
-        +tools_used: list~str~
-    }
-
-    class PredictRequest {
-        +opponent: str
-        +venue: "home" | "away"
-        +date: str
-    }
-    class PredictResponse {
-        +win: float
-        +draw: float
-        +loss: float
-    }
-
-    class CommentaryResponse {
-        +team_id: int
-        +match_status: str
-        +events: list~CommentaryEvent~
-    }
-    class CommentaryEvent {
-        +minute: int
-        +type: str
-        +player: str
-        +commentary: str
-    }
-```
-
----
-
-## 8. Data Model (PostgreSQL)
+## 4. Data Model
 
 ```mermaid
 erDiagram
-    match_events {
-        uuid id PK
-        varchar team
-        varchar type
-        varchar player
-        int minute
-        jsonb raw_event
-        timestamp created_at
-    }
-
-    articles {
-        varchar article_id PK
-        varchar category
-        varchar title
-        varchar link
-        timestamp published
+    ARTICLES {
+        str article_id PK
+        str category
+        str title
+        str link
+        datetime published
         text content
-        varchar author
-        timestamp fetched_at
+        str image_url
+        str author
     }
-
-    users {
-        varchar user_id PK
-        jsonb preferences
-        timestamp created_at
+    USERS {
+        str user_id PK
+        json preferences
+        datetime created_at
     }
-
-    team_stats {
-        varchar team_name PK
+    MATCH_EVENTS {
+        str id PK
+        str team
+        str type
+        str player
+        int minute
+        json raw_event
+    }
+    TEAM_STATS {
+        str team_name PK
         float gf_rolling
         float ga_rolling
         float sh_rolling
@@ -350,280 +174,165 @@ erDiagram
         float fk_rolling
         float pk_rolling
         float pkatt_rolling
-        timestamp updated_at
+        float xg_rolling
+        float xga_rolling
+        float poss_rolling
+        datetime updated_at
+    }
+    CHAT_MESSAGES {
+        str id PK
+        str conversation_id
+        str role
+        text content
+        datetime created_at
     }
 
-    users ||--o{ articles : "preferences match category"
+    USERS ||--o{ CHAT_MESSAGES : "owns"
 ```
 
-### Indexes
+**Design notes**
 
-| Table | Index | Purpose |
-|-------|-------|---------|
-| `articles` | `ix_articles_category` | Filter by category |
-| `articles` | `ix_articles_published` | Sort by recency |
-| `match_events` | `ix_events_team` | Filter by team |
-| `team_stats` | PK on `team_name` | Feature lookup at inference |
+- `team_stats` is the prediction hot-path table: one row per team with
+  5-game rolling averages (11 stats). Inference does O(1) lookups.
+- `chat_messages` enables conversation memory without a vector store.
+- Alembic migrations are versioned (`migrations/versions/`); the app also
+  calls `create_all` as a fallback for fresh installs.
 
 ---
 
-## 9. Docker Compose Architecture
+## 5. Prediction Feature Pipeline
 
 ```mermaid
-graph TB
-    subgraph "docker-compose.yml"
-        subgraph "app"
-            API["FastAPI<br/>Port: 8000<br/>Depends: db, ollama"]
-        end
-        subgraph "db"
-            PG["PostgreSQL 16<br/>Port: 5432<br/>Volume: pgdata"]
-        end
-        subgraph "ollama"
-            OLL["Ollama Server<br/>Port: 11434<br/>Volume: ollama_models"]
-        end
-        subgraph "frontend"
-            FE["Vite Dev Server<br/>Port: 5173<br/>Depends: app"]
-        end
+flowchart LR
+    RAW[("raw matches CSV")]
+    CLEAN["clean.py<br/>normalize names → encode →<br/>5-game rolling (closed-left) →<br/>opponent merge → split"]
+    TRAIN["train.py<br/>SMOTE → XGBoost (early stop)<br/>+ RandomForest → select by log loss"]
+    ARTIFACTS[("models/: pkl + metrics + importance + mappings")]
+    STATS[("team_stats table")]
+    INFER["features.py<br/>26-feature vector"]
+
+    RAW --> CLEAN --> TRAIN --> ARTIFACTS
+    RAW -->|update_team_stats.py| STATS
+    ARTIFACTS --> INFER
+    STATS --> INFER
+```
+
+**The 26 features** (single source of truth: `app/prediction/features.py`):
+
+1. Basic: `venue_code`, `opp_code`, `hour`, `day_code`
+2. Real Madrid rolling (5-game): `gf`, `ga`, `sh`, `sot`, `dist`, `fk`, `pk`,
+   `pkatt`, `xg`, `xga`, `poss`
+3. Opponent rolling: same 11, prefixed `opp_`
+
+Rolling windows use `closed='left'` so the current match's stats never leak
+into its own features. The split is temporal (last 2 seasons = test).
+
+**Graceful degradation** — new/promoted teams (e.g. Málaga, Oviedo) get a
+stable fallback opponent code and league-average stats until their data
+exists, so predictions never hard-fail.
+
+---
+
+## 6. Data Collection
+
+```mermaid
+flowchart TB
+    subgraph Offline["Offline (make pipeline / fetch_season)"]
+        FD["football-data.co.uk<br/>complete season, no key"]
+        AFB["API-Football<br/>full stats when covered"]
+        FBREF["fbref via scrape.py<br/>gold standard, resumable"]
     end
+    MERGE["merge_into_raw<br/>dedupe (date, team)"]
+    RAW[("la_liga_10_seasons.csv")]
 
-    subgraph "Volumes"
-        V1["pgdata<br/>(persistent DB)"]
-        V2["ollama_models<br/>(LLM weights)"]
-        V3["./models/<br/>(ML artifacts, bind mount)"]
-        V4["./data/<br/>(pipeline data, bind mount)"]
+    FD --> MERGE
+    AFB --> MERGE
+    FBREF --> MERGE
+    MERGE --> RAW
+```
+
+- `fetch_season.py` fills xG/possession/etc. with league-average priors when
+  the source lacks them, so downstream rolling features stay on scale.
+- `scrape.py` checkpoints per team-season (`data/raw/partial/`) for resumable
+  full-fidelity pulls.
+
+---
+
+## 7. Fixtures & Season Hub
+
+```mermaid
+flowchart LR
+    STATIC["app/fixtures_2026_27.json<br/>38 matchdays"]
+    OVERRIDE["data/fixtures_2026_27.json<br/>(optional override)"]
+    API["API-Football<br/>fixtures + results"]
+    CACHE["6h TTL cache"]
+    SVC["fixtures.py<br/>merge by matchday"]
+    ENDPOINTS["/season /next-match /fixtures /results"]
+
+    STATIC --> SVC
+    OVERRIDE --> SVC
+    API --> CACHE --> SVC
+    SVC --> ENDPOINTS
+```
+
+The static schedule guarantees offline availability; API-Football enriches
+kickoff times and finished-match results when the key is configured.
+
+---
+
+## 8. Security & Operations
+
+- **Secrets**: `.env` is gitignored. Keys: `DEEPSEEK_API_KEY`,
+  `API_FOOTBALL_KEY`, optional `GEMINI_API_KEY`.
+- **LLM keys** live only server-side; the frontend never sees them.
+- **Dependency hygiene**: ruff + black enforced via `make lint`; 62 pytest
+  tests plus frontend vitest; CI-friendly (`make test` exits non-zero on
+  failure).
+- **Monitoring**: `GET /health` reports DB + LLM connectivity. Request
+  middleware logs method, path, status, latency, and a request ID.
+- **Scheduler** (APScheduler): RSS fetch every 6h, team-stats staleness check
+  every 24h — both fail soft (logged, non-fatal).
+
+---
+
+## 9. Deployment
+
+```mermaid
+flowchart TB
+    subgraph Docker["Docker Compose"]
+        PG["postgres:16"]
+        OLL["ollama (optional, local LLM)"]
+        APP["app container<br/>uvicorn :8000"]
     end
+    FE["frontend dev server :8080"]
+    VOL[("models/ volume")]
 
-    PG --> V1
-    OLL --> V2
-    API --> V3
-    API --> V4
-    FE -->|"proxy to :8000"| API
-    API --> PG
-    API --> OLL
+    APP --> PG
+    APP --> VOL
+    APP -.-> OLL
+    FE --> APP
 ```
 
-```yaml
-# docker-compose.yml (conceptual)
-services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: real_madrid
-      POSTGRES_USER: rmadmin
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+Local dev (recommended):
 
-  ollama:
-    image: ollama/ollama:latest
-    volumes:
-      - ollama_models:/root/.ollama
-    ports:
-      - "11434:11434"
+```bash
+make setup
+make dev          # backend :8000
+cd frontend && npm run dev   # frontend :8080
+```
 
-  app:
-    build: .
-    environment:
-      DATABASE_URL: postgresql://rmadmin:${DB_PASSWORD}@db:5432/real_madrid
-      LLM_PROVIDER: ollama
-      OLLAMA_BASE_URL: http://ollama:11434
-      MODEL_DIR: /app/models
-    volumes:
-      - ./models:/app/models:ro
-      - ./data:/app/data:ro
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-      - ollama
+Docker:
 
-  frontend:
-    build: ./frontend
-    ports:
-      - "5173:5173"
-    depends_on:
-      - app
-
-volumes:
-  pgdata:
-  ollama_models:
+```bash
+docker compose up --build
 ```
 
 ---
 
-## 10. Startup & Initialization
+## 10. Future Work
 
-```mermaid
-sequenceDiagram
-    participant DC as docker-compose up
-    participant PG as PostgreSQL
-    participant OLL as Ollama
-    participant APP as FastAPI
-
-    DC->>PG: Start container
-    DC->>OLL: Start container
-    PG-->>DC: Ready (port 5432)
-    OLL-->>DC: Ready (port 11434)
-    DC->>APP: Start container (depends_on: db, ollama)
-
-    APP->>APP: Lifespan startup
-    APP->>PG: Run Alembic migrations (create tables)
-    APP->>APP: Load XGBoost model from ./models/
-    APP->>APP: Load opponent/venue mappings from ./models/
-    APP->>APP: Start APScheduler (RSS fetch every 6h)
-    APP-->>DC: Ready (port 8000)
-
-    DC->>DC: Start frontend (depends_on: app)
-```
-
----
-
-## 11. Model Serving (Local)
-
-```python
-# No S3. No boto3. Just filesystem.
-import joblib
-from pathlib import Path
-
-_model = None
-
-def get_model(model_dir: str = "/app/models") -> object:
-    global _model
-    if _model is None:
-        path = Path(model_dir) / "xgboost_model.pkl"
-        _model = joblib.load(path)
-    return _model
-```
-
-Model is loaded **once** at startup via FastAPI lifespan, cached in-process. No cold starts, no S3 downloads. Docker volume mount makes `./models/` available at `/app/models` inside the container.
-
----
-
-## 12. Deployment Flow
-
-```mermaid
-sequenceDiagram
-    participant D as Developer
-    participant MK as Makefile
-    participant DC as docker-compose
-
-    Note over D,DC: First-time setup
-    D->>MK: make setup
-    MK->>DC: docker-compose up -d db ollama
-    MK->>MK: ollama pull llama3
-    MK->>DC: docker-compose up -d app frontend
-
-    Note over D,DC: Pipeline execution
-    D->>MK: make pipeline
-    MK->>MK: python -m pipeline.scrape
-    MK->>MK: python -m pipeline.clean
-    MK->>MK: python -m pipeline.train
-    MK->>MK: python -m pipeline.update_team_stats
-
-    Note over D,DC: Restart to pick up new model
-    D->>MK: make restart
-    MK->>DC: docker-compose restart app
-```
-
----
-
-## 13. Project Structure (Updated)
-
-```
-Real_Madrid_AI_Platform/
-├── app/
-│   ├── __init__.py
-│   ├── main.py               # Uvicorn entrypoint, lifespan, scheduler
-│   ├── config.py              # Pydantic Settings (DATABASE_URL, LLM_PROVIDER, etc.)
-│   ├── database.py            # SQLAlchemy engine, session, Base
-│   ├── models.py              # SQLAlchemy ORM models (all tables)
-│   ├── middleware.py           # CORS, structured logging
-│   ├── chatbot/
-│   │   ├── router.py
-│   │   ├── agent.py
-│   │   ├── llm_provider.py
-│   │   └── tools.py
-│   ├── prediction/
-│   │   ├── router.py
-│   │   ├── model.py           # Load from filesystem, no S3
-│   │   ├── features.py
-│   │   └── mappings.py
-│   ├── commentary/
-│   │   ├── router.py
-│   │   ├── api_football.py
-│   │   └── generator.py
-│   └── content/
-│       ├── router.py
-│       ├── rss.py
-│       └── crud.py            # SQLAlchemy queries
-├── pipeline/
-│   ├── scrape.py
-│   ├── clean.py
-│   ├── train.py
-│   └── update_team_stats.py
-├── migrations/                 # Alembic
-│   ├── env.py
-│   └── versions/
-├── frontend/
-│   ├── src/
-│   ├── Dockerfile
-│   └── package.json
-├── data/
-├── models/
-├── tests/
-│   ├── conftest.py
-│   └── ...
-├── docker-compose.yml
-├── Dockerfile
-├── Makefile
-├── pyproject.toml
-├── alembic.ini
-├── .env.example
-└── README.md
-```
-
----
-
-## 14. Security Considerations
-
-| Concern | Mitigation |
-|---------|------------|
-| DB credentials | `.env` file (gitignored), `DB_PASSWORD` env var |
-| Gemini API key (optional) | `.env` file, only needed if `LLM_PROVIDER=gemini` |
-| API-Football key | `.env` file |
-| CORS | Restrict `allow_origins` to `http://localhost:5173` |
-| SQL injection | SQLAlchemy parameterized queries, Pydantic input validation |
-| Agent runaway | Max 5 tool-call iterations, request timeout middleware |
-| Container isolation | App runs as non-root user in Dockerfile |
-
----
-
-## 15. Technology Stack
-
-| Layer | Technology | Replaces |
-|-------|-----------|----------|
-| Runtime | Docker + docker-compose | AWS Lambda + API Gateway |
-| Database | PostgreSQL 16 | DynamoDB |
-| ORM | SQLAlchemy + Alembic | boto3 DynamoDB resource |
-| Model storage | Local filesystem (Docker volume) | S3 |
-| LLM | Ollama (local) / Gemini (optional) | Gemini-only |
-| Scheduling | APScheduler (in-process) | EventBridge |
-| Monitoring | Structured logging (JSON) | CloudWatch |
-| IaC | docker-compose.yml | Terraform |
-| Frontend | Vite + React | — |
-
----
-
-## 16. Future Considerations
-
-| Enhancement | Complexity | Value |
-|-------------|-----------|-------|
-| Nginx reverse proxy | Low | SSL termination, rate limiting |
-| Prometheus + Grafana | Medium | Metrics dashboards |
-| Redis caching | Low | Cache predictions, API-Football responses |
-| User auth (JWT) | Medium | Real user preferences |
-| CI/CD (GitHub Actions) | Low | Auto-test on push |
-| Cloud deployment option | Medium | Deploy same containers to ECS/Fly.io/Railway |
-| Multi-league support | Medium | Generalize beyond Real Madrid |
+- Full API-Football season mapping in `fetch_season.py` (when a season is
+  covered there) for real xG/possession on every pulled season.
+- Model calibration (temperature scaling) for sharper W/D/L probabilities.
+- User auth + per-user chat history isolation.
+- Historical fixtures/results page (season standings table).

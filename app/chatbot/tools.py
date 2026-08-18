@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.commentary.api_football import get_live_events
 from app.commentary.generator import generate_match_summary
 from app.content.crud import get_articles
+from app.fixtures import get_next_match
 from app.prediction.features import build_feature_vector
 from app.prediction.model import get_model
 
@@ -53,7 +54,9 @@ def tool_get_commentary(args: dict, db: Session) -> str:
 
     fixture = events[0]["fixture"]
     commentary = generate_match_summary(events)
-    lines = [f"Live: {fixture['home']} {fixture['score_home']}-{fixture['score_away']} {fixture['away']}"]
+    lines = [
+        f"Live: {fixture['home']} {fixture['score_home']}-{fixture['score_away']} {fixture['away']}"
+    ]
     lines.append(f"Status: {fixture['status']} ({fixture['elapsed']}')")
     lines.append("")
     for c in commentary[-10:]:  # Last 10 events
@@ -79,9 +82,23 @@ def tool_get_articles(args: dict, db: Session) -> str:
     return "\n".join(lines)
 
 
+def tool_get_next_match(args: dict, db: Session) -> str:
+    """Fetch the next upcoming Real Madrid fixture with exact date and venue."""
+    fixture = get_next_match()
+    if fixture is None:
+        return "No upcoming fixtures — the season schedule is not available."
+    kickoff = f" at {fixture['kickoff']}" if fixture.get("kickoff") else ""
+    return (
+        f"Next Real Madrid fixture: Matchday {fixture['matchday']}, "
+        f"{fixture['opponent']} ({fixture['venue']}), date {fixture['date']}{kickoff}. "
+        "Use this exact date and venue when calling predict_match."
+    )
+
+
 # Registry: tool name → handler function
 TOOLS: dict[str, Callable] = {
     "predict_match": tool_predict_match,
     "get_commentary": tool_get_commentary,
     "get_articles": tool_get_articles,
+    "get_next_match": tool_get_next_match,
 }

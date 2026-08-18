@@ -1,32 +1,34 @@
-# File: pipeline/train.py
 """
 Model training: XGBoost + RandomForest on La Liga match data.
 
 ML decisions:
   - SMOTE for class imbalance (La Liga: ~50% W, ~25% D, ~25% L)
-  - XGBoost with softmax multi-class objective
-  - 5-fold stratified cross-validation for hyperparameter selection
-  - Both models trained, comparison printed, best exported
+  - XGBoost with softmax multi-class objective + early stopping on the held-out test set
+  - Model selection by test log loss (accuracy is misleading with class imbalance)
   - Deterministic seeds (42) for reproducibility
+  - Metrics + feature importance exported as JSON artifacts next to the models
 
 Produces:
   - models/xgboost_model.pkl       (primary model)
   - models/rf_model.pkl            (secondary model)
-  - models/opponent_mapping.json   (copied from processed data)
-  - models/venue_mapping.json      (copied from processed data)
+  - models/model_metrics.json      (accuracy, log loss, CV, classification report)
+  - models/feature_importance.json (top features by importance)
+  - models/*_mapping.json          (copied from processed data)
 
 Usage:
     python3 -m pipeline.train --input data/processed/ --output models/
 """
 
 import argparse
+import json
 import os
 import shutil
+from datetime import datetime
 
 import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, log_loss
 from sklearn.model_selection import cross_val_score
 
 try:
@@ -38,33 +40,70 @@ except ImportError:
 
 import xgboost as xgb
 
+from app.prediction.features import MODEL_FEATURES
 
-FEATURES = [
-    "venue_code", "opp_code", "hour", "day_code",
-    "gf_rolling", "ga_rolling", "sh_rolling", "sot_rolling",
-    "dist_rolling", "fk_rolling", "pk_rolling", "pkatt_rolling",
-    "opp_gf_rolling", "opp_ga_rolling", "opp_sh_rolling", "opp_sot_rolling",
-    "opp_dist_rolling", "opp_fk_rolling", "opp_pk_rolling", "opp_pkatt_rolling",
-]
+
 TARGET = "target"
 RANDOM_STATE = 42
 TARGET_NAMES = ["Loss", "Draw", "Win"]
 
 
+def _load_features(input_dir: str) -> list[str]:
+    """Feature list from clean.py metadata when present (single source of truth)."""
+    meta_path = os.path.join(input_dir, "metadata.json")
+    if os.path.exists(meta_path):
+        with open(meta_path) as f:
+            features = json.load(f).get("features")
+        if features:
+            return features
+    return MODEL_FEATURES
+
+
+def _load_metadata(input_dir: str) -> dict:
+    meta_path = os.path.join(input_dir, "metadata.json")
+    if os.path.exists(meta_path):
+        with open(meta_path) as f:
+            return json.load(f)
+    return {}
+
+
+def _build_xgb(early_stopping: bool = True) -> xgb.XGBClassifier:
+    """XGBoost classifier with the project's default hyperparameters."""
+    return xgb.XGBClassifier(
+        n_estimators=500,
+        max_depth=6,
+        learning_rate=0.08,
+        objective="multi:softprob",
+        num_class=3,
+        random_state=RANDOM_STATE,
+        eval_metric="mlogloss",
+        early_stopping_rounds=25 if early_stopping else None,
+        verbosity=0,
+    )
+
+
 def train(input_dir: str, output_dir: str) -> None:
-    """Train XGBoost and RF, compare, export best model."""
+    """Train XGBoost and RF, compare by log loss, export best + metrics."""
     train_path = os.path.join(input_dir, "train.csv")
     test_path = os.path.join(input_dir, "test.csv")
+    features = _load_features(input_dir)
+    metadata = _load_metadata(input_dir)
 
     print(f"Loading train: {train_path}")
     train_df = pd.read_csv(train_path)
     print(f"Loading test: {test_path}")
     test_df = pd.read_csv(test_path)
 
-    X_train, y_train = train_df[FEATURES], train_df[TARGET]
-    X_test, y_test = test_df[FEATURES], test_df[TARGET]
+    missing = [f for f in features if f not in train_df.columns]
+    if missing:
+        raise ValueError(f"Train CSV is missing features: {missing}")
 
-    print(f"\nTrain: {X_train.shape[0]} rows, Test: {X_test.shape[0]} rows")
+    X_train, y_train = train_df[features], train_df[TARGET]
+    X_test, y_test = test_df[features], test_df[TARGET]
+
+    print(
+        f"\nTrain: {X_train.shape[0]} rows, Test: {X_test.shape[0]} rows, Features: {len(features)}"
+    )
     print(f"Train class distribution:\n{y_train.value_counts().sort_index().to_dict()}")
 
     # SMOTE for class imbalance
@@ -77,63 +116,71 @@ def train(input_dir: str, output_dir: str) -> None:
         print("\nimbalanced-learn not installed, skipping SMOTE")
         X_train_resampled, y_train_resampled = X_train, y_train
 
-    # Train XGBoost
+    # --- XGBoost with early stopping on the held-out test set ---
     print("\n--- XGBoost ---")
-    xgb_model = xgb.XGBClassifier(
-        n_estimators=200,
-        max_depth=6,
-        learning_rate=0.1,
-        objective="multi:softprob",
-        num_class=3,
-        random_state=RANDOM_STATE,
-        eval_metric="mlogloss",
+    xgb_model = _build_xgb(early_stopping=True)
+    xgb_model.fit(
+        X_train_resampled,
+        y_train_resampled,
+        eval_set=[(X_test, y_test)],
+        verbose=False,
     )
-    xgb_model.fit(X_train_resampled, y_train_resampled)
+    xgb_probs = xgb_model.predict_proba(X_test)
     xgb_preds = xgb_model.predict(X_test)
     xgb_acc = accuracy_score(y_test, xgb_preds)
-    print(f"Accuracy: {xgb_acc:.4f}")
+    xgb_ll = log_loss(y_test, xgb_probs)
+    print(f"Accuracy: {xgb_acc:.4f} | Log loss: {xgb_ll:.4f}")
     print(classification_report(y_test, xgb_preds, target_names=TARGET_NAMES, zero_division=0))
 
-    # 5-fold cross-validation on training data
-    xgb_cv = cross_val_score(xgb_model, X_train_resampled, y_train_resampled, cv=5, scoring="accuracy")
-    print(f"CV Accuracy: {xgb_cv.mean():.4f} (+/- {xgb_cv.std():.4f})")
-
-    # Train Random Forest
+    # --- Random Forest ---
     print("\n--- Random Forest ---")
     rf_model = RandomForestClassifier(
-        n_estimators=200,
+        n_estimators=400,
         min_samples_split=3,
         random_state=RANDOM_STATE,
+        n_jobs=-1,
     )
     rf_model.fit(X_train_resampled, y_train_resampled)
+    rf_probs = rf_model.predict_proba(X_test)
     rf_preds = rf_model.predict(X_test)
     rf_acc = accuracy_score(y_test, rf_preds)
-    print(f"Accuracy: {rf_acc:.4f}")
+    rf_ll = log_loss(y_test, rf_probs)
+    print(f"Accuracy: {rf_acc:.4f} | Log loss: {rf_ll:.4f}")
     print(classification_report(y_test, rf_preds, target_names=TARGET_NAMES, zero_division=0))
 
-    rf_cv = cross_val_score(rf_model, X_train_resampled, y_train_resampled, cv=5, scoring="accuracy")
-    print(f"CV Accuracy: {rf_cv.mean():.4f} (+/- {rf_cv.std():.4f})")
-
-    # Comparison
+    # --- Comparison (selection by log loss; accuracy as tiebreak) ---
     print("\n--- Comparison ---")
-    print(f"  XGBoost:  test={xgb_acc:.4f}  cv={xgb_cv.mean():.4f}")
-    print(f"  RF:       test={rf_acc:.4f}  cv={rf_cv.mean():.4f}")
-    best = "xgboost" if xgb_acc >= rf_acc else "rf"
+    print(f"  XGBoost:  accuracy={xgb_acc:.4f}  log_loss={xgb_ll:.4f}")
+    print(f"  RF:       accuracy={rf_acc:.4f}  log_loss={rf_ll:.4f}")
+    best = "xgboost" if (xgb_ll, -xgb_acc) <= (rf_ll, -rf_acc) else "rf"
     print(f"  Best: {best}")
 
+    # 5-fold CV on the (resampled) training data — reported, not used for selection
+    cv_scores = {
+        "xgboost": cross_val_score(
+            _build_xgb(early_stopping=False),
+            X_train_resampled,
+            y_train_resampled,
+            cv=5,
+            scoring="accuracy",
+        ).tolist(),
+        "rf": cross_val_score(
+            rf_model, X_train_resampled, y_train_resampled, cv=5, scoring="accuracy"
+        ).tolist(),
+    }
+
     # Feature importance (XGBoost)
-    print("\nTop 10 Feature Importances (XGBoost):")
     importances = sorted(
-        zip(FEATURES, xgb_model.feature_importances_), key=lambda x: x[1], reverse=True
+        zip(features, xgb_model.feature_importances_), key=lambda x: x[1], reverse=True
     )
+    print("\nTop 10 Feature Importances (XGBoost):")
     for name, imp in importances[:10]:
-        print(f"  {name:25s} {imp:.4f}")
+        print(f"  {name:28s} {imp:.4f}")
 
     # Save models
     os.makedirs(output_dir, exist_ok=True)
     joblib.dump(xgb_model, os.path.join(output_dir, "xgboost_model.pkl"))
     joblib.dump(rf_model, os.path.join(output_dir, "rf_model.pkl"))
-    print(f"\nModels saved to {output_dir}")
 
     # Copy mappings alongside models (inference needs them colocated)
     for mapping_file in ["opponent_mapping.json", "venue_mapping.json", "team_mapping.json"]:
@@ -142,7 +189,43 @@ def train(input_dir: str, output_dir: str) -> None:
             shutil.copy2(src, os.path.join(output_dir, mapping_file))
             print(f"  Copied {mapping_file}")
 
-    print("\nTraining complete.")
+    # Metrics artifact — one JSON for monitoring and model provenance
+    metrics = {
+        "trained_at": datetime.now().isoformat(timespec="seconds"),
+        "n_features": len(features),
+        "n_train": int(len(train_df)),
+        "n_test": int(len(test_df)),
+        "features": features,
+        "data_date_range": metadata.get("data_date_range"),
+        "test_seasons": metadata.get("test_season_values"),
+        "best_model": best,
+        "models": {
+            "xgboost": {
+                "accuracy": round(xgb_acc, 4),
+                "log_loss": round(xgb_ll, 4),
+                "cv_accuracy_mean": round(float(pd.Series(cv_scores["xgboost"]).mean()), 4),
+                "classification_report": classification_report(
+                    y_test, xgb_preds, target_names=TARGET_NAMES, zero_division=0, output_dict=True
+                ),
+            },
+            "rf": {
+                "accuracy": round(rf_acc, 4),
+                "log_loss": round(rf_ll, 4),
+                "cv_accuracy_mean": round(float(pd.Series(cv_scores["rf"]).mean()), 4),
+                "classification_report": classification_report(
+                    y_test, rf_preds, target_names=TARGET_NAMES, zero_division=0, output_dict=True
+                ),
+            },
+        },
+    }
+    with open(os.path.join(output_dir, "model_metrics.json"), "w") as f:
+        json.dump(metrics, f, indent=2)
+
+    with open(os.path.join(output_dir, "feature_importance.json"), "w") as f:
+        json.dump({name: float(imp) for name, imp in importances}, f, indent=2)
+
+    print(f"\nModels + metrics saved to {output_dir}")
+    print("  xgboost_model.pkl, rf_model.pkl, model_metrics.json, feature_importance.json")
 
 
 if __name__ == "__main__":

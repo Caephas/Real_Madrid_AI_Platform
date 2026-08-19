@@ -21,6 +21,7 @@ season**, and predictions now run on DeepSeek with streaming chat.
 | **Prediction Insights** | Per-match explainability — which stats (opponent xG form, possession, shot volume) are driving the model's lean |
 | **Season Hub** | Full 2026/27 fixture list: matchdays, kickoffs, live countdowns, recent results, click-to-predict |
 | **Standings & History** | Live league table with last-5 form badges, season-by-season Real Madrid results, and head-to-head records |
+| **Call Review** | Paste a YouTube link or upload a clip — the AI reviews the referee's decision frame by frame with visible reasoning |
 | **Live Commentary** | Polls API-Football during matches and turns events into readable commentary |
 | **Tactical Analysis** | AI narrative comparing both teams' form with key statistical factors |
 | **Chat Assistant** | DeepSeek-powered companion with streaming answers — asks the model, checks fixtures/news/live data, and remembers the conversation |
@@ -164,6 +165,8 @@ All endpoints are served from `http://localhost:8000` (Swagger UI at `/docs`).
 | `GET` | `/form` | Recent results (W/D/L) for any team |
 | `GET` | `/history` | Real Madrid's matches for a season |
 | `GET` | `/h2h` | Head-to-head record vs an opponent |
+| `POST` | `/calls/analyze` | Start a Call Review job (YouTube URL or video upload) |
+| `GET` | `/calls/{id}` | Poll a Call Review job (status, verdict, reasoning, frames) |
 | `GET` | `/next-match` | Next upcoming fixture |
 | `GET` | `/fixtures` | Remaining fixtures |
 | `GET` | `/season` | Full season info: fixtures, statuses, results |
@@ -307,6 +310,7 @@ This runs PostgreSQL, the backend, **and the frontend behind nginx**
 |---------|-----|
 | fbref returns 403 | fbref blocks some networks. `make refresh` now falls back to football-data.co.uk automatically — or use `python3 -m pipeline.fetch_season --season 2526 --merge` directly |
 | No chat answers | Check `GET /health` — `llm` should say `connected`. Verify `DEEPSEEK_API_KEY` in `.env` |
+| Call Review says vision isn't configured | Add a `GEMINI_API_KEY` (free at Google AI Studio) — DeepSeek's API is text-only, so frame analysis runs through Gemini |
 | Predictions fail with "no rolling stats" | Run `make refresh` or `update_team_stats` to populate `team_stats` |
 | Wrong fixture dates | API-Football overrides the static schedule when the key is set; add `data/fixtures_2026_27.json` to correct dates manually |
 

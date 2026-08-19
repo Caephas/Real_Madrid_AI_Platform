@@ -2,7 +2,7 @@
 # Real Madrid AI Platform — Makefile
 # ============================================
 
-.PHONY: setup dev test pipeline lint clean help refresh
+.PHONY: setup dev test pipeline lint clean stop help refresh
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -40,6 +40,14 @@ dev-all: ## Start all services (containerized)
 
 dev-frontend: ## Start frontend dev server
 	cd frontend && npm run dev
+
+stop: ## Stop dev servers and containers (keeps data/volumes)
+	@echo "Stopping backend..."
+	@pkill -f "uvicorn app.main:app" 2>/dev/null || true
+	@echo "Stopping frontend..."
+	@pkill -f "Real_Madrid_AI_Platform/frontend/node_modules/.bin/vite" 2>/dev/null || true
+	docker compose stop
+	@echo "All services stopped. Data volumes kept (make clean removes them)."
 
 # ---------- Database ----------
 

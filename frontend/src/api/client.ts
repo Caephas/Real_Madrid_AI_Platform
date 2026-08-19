@@ -122,6 +122,39 @@ export interface ConversationSummary {
   updated_at: string | null;
 }
 
+export interface CallFrame {
+  timestamp: number;
+  file: string;
+}
+
+export interface CallReasoningStep {
+  timestamp: number;
+  observation: string;
+  assessment: string;
+}
+
+export interface CallResult {
+  verdict: 'correct_call' | 'incorrect_call' | 'unclear';
+  decision_type: string;
+  confidence: number;
+  summary: string;
+  reasoning: CallReasoningStep[];
+  laws_cited?: string[];
+  key_frames: { timestamp: number; caption: string }[];
+  frame_count?: number;
+  job_id?: string;
+  competition?: string;
+  frames?: CallFrame[];
+}
+
+export interface CallJob {
+  job_id: string;
+  status: 'queued' | 'extracting' | 'analyzing' | 'done' | 'error';
+  progress: number;
+  error: string | null;
+  result: CallResult | null;
+}
+
 export interface CommentaryItem {
   minute: number | string;
   type: string;
@@ -309,4 +342,27 @@ export const api = {
 
   getH2H: (opponent: string) =>
     request<H2HRecord>(`/h2h?opponent=${encodeURIComponent(opponent)}`),
+
+  analyzeCall: (
+    youtubeUrl?: string,
+    note?: string,
+    file?: File,
+    competition: string = 'La Liga',
+    decisionType: string = 'auto'
+  ) => {
+    const form = new FormData();
+    if (youtubeUrl) form.append('youtube_url', youtubeUrl);
+    if (note) form.append('note', note);
+    if (file) form.append('video', file);
+    form.append('competition', competition);
+    form.append('decision_type', decisionType);
+    return fetch(`${BASE}/calls/analyze`, { method: 'POST', body: form }).then((res) => {
+      if (!res.ok) return res.json().then((e) => Promise.reject(new Error(e.detail ?? 'Upload failed')));
+      return res.json() as Promise<CallJob>;
+    });
+  },
+
+  getCall: (jobId: string) => request<CallJob>(`/calls/${jobId}`),
+
+  callFrameUrl: (jobId: string, filename: string) => `${BASE}/calls/${jobId}/frames/${filename}`,
 };

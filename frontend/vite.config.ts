@@ -37,6 +37,7 @@ export default defineConfig(({ mode }) => ({
       '/form': apiProxy(),
       '/history': apiProxy(),
       '/h2h': apiProxy(),
+      '/calls': apiProxy(),
       '/conversations': apiProxy(),
       '/fixtures': apiProxy(),
       '/opponents': apiProxy(),

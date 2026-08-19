@@ -93,3 +93,24 @@ class ChatMessage(Base):
     role: Mapped[str] = mapped_column(String(20))
     content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class CallJob(Base):
+    """Persistent record of a Call Review analysis job."""
+
+    __tablename__ = "call_jobs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    source_type: Mapped[str] = mapped_column(String(20))
+    source: Mapped[str] = mapped_column(String(1000))
+    note: Mapped[str] = mapped_column(Text, default="")
+    competition: Mapped[str] = mapped_column(String(100), default="La Liga")
+    decision_type: Mapped[str] = mapped_column(String(50), default="auto")
+    status: Mapped[str] = mapped_column(String(20), default="queued", index=True)
+    progress: Mapped[float] = mapped_column(Float, default=0.0)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
+    )

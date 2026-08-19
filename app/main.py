@@ -17,6 +17,8 @@ from app.content.router import router as content_router
 from app.content.rss import fetch_and_store_articles
 from app.commentary.router import router as commentary_router
 from app.chatbot.router import router as chatbot_router
+from app.callanalysis.router import router as callanalysis_router
+from app.callanalysis.analyzer import cleanup_old_jobs, store as call_job_store
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,6 +36,14 @@ async def lifespan(app: FastAPI):
     # Create tables (use Alembic in prod, this is a fallback)
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables ensured")
+
+    # Call Review: jobs interrupted by a restart are marked failed
+    try:
+        interrupted = call_job_store.mark_interrupted("Interrupted by a server restart.")
+        if interrupted:
+            logger.warning("Marked %d Call Review jobs as interrupted", interrupted)
+    except Exception as e:
+        logger.warning("Could not mark interrupted Call Review jobs: %s", e)
 
     # Load ML model and mappings from ./models/ volume
     try:
@@ -74,8 +84,15 @@ async def lifespan(app: FastAPI):
         id="stats_refresh",
         next_run_time=datetime.now(),  # check staleness on startup
     )
+    scheduler.add_job(
+        cleanup_old_jobs,
+        "interval",
+        hours=24,
+        id="call_jobs_cleanup",
+        next_run_time=None,
+    )
     scheduler.start()
-    logger.info("APScheduler started: RSS fetch every 6h, stats refresh every 24h")
+    logger.info("APScheduler started: RSS 6h, stats 24h, call-jobs cleanup 24h")
 
     yield
 
@@ -95,6 +112,7 @@ app.include_router(prediction_router)
 app.include_router(content_router)
 app.include_router(commentary_router)
 app.include_router(chatbot_router)
+app.include_router(callanalysis_router)
 
 
 @app.get("/health")

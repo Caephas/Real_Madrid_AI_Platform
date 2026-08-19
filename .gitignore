@@ -19,6 +19,7 @@ models/*.json
 # Data (raw/processed CSVs — potentially large)
 data/raw/
 data/processed/
+data/uploads/
 
 # IDE
 .idea/

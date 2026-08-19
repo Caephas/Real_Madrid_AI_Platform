@@ -32,6 +32,9 @@ dependencies = [
     "feedparser>=6.0,<7.0",
     "requests>=2.32,<3.0",
 
+    # Call Review
+    "yt-dlp>=2025.1.15,<2027",
+
     # Scheduling
     "apscheduler>=3.10,<4.0",
 

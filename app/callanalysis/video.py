@@ -24,6 +24,13 @@ YOUTUBE_HOSTS = {
     "youtu.be",
 }
 
+# YouTube bot-protection intermittently 403s the media URLs of some player
+# clients (the web client now requires PO tokens on many networks). Trying the
+# Android client is the most reliable anonymous fallback; keep the full chain
+# so a working client is always attempted.
+PLAYER_CLIENTS = ("default", "android", "tv", "ios", "web_embedded")
+VIDEO_SUFFIXES = {".mp4", ".mkv", ".webm", ".mov"}
+
 
 def _run(cmd: list[str]) -> None:
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
@@ -43,25 +50,39 @@ def validate_youtube_url(url: str) -> str:
 
 
 def download_youtube(url: str, work_dir: Path) -> Path:
-    """Download a YouTube video to work_dir/video.mp4 via yt-dlp."""
+    """Download a YouTube video to work_dir/video.mp4 via yt-dlp.
+
+    Retries across player clients because YouTube's web client often returns
+    403 on the media stream while other clients (android) still work.
+    """
     import yt_dlp
 
     url = validate_youtube_url(url)
-    ydl_opts = {
-        "outtmpl": str(work_dir / "video.%(ext)s"),
-        "format": "bv*[height<=720]+ba/b[height<=720]/b",
-        "merge_output_format": "mp4",
-        "quiet": True,
-        "no_warnings": True,
-        "noplaylist": True,
-    }
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-    except Exception as e:
-        raise RuntimeError(f"Failed to download video: {e}") from e
+    errors: list[str] = []
+    for client in PLAYER_CLIENTS:
+        opts = {
+            "outtmpl": str(work_dir / "video.%(ext)s"),
+            "format": "bv*[height<=720]+ba/b[height<=720]/b",
+            "merge_output_format": "mp4",
+            "quiet": True,
+            "no_warnings": True,
+            "noplaylist": True,
+        }
+        if client != "default":
+            opts["extractor_args"] = {"youtube": {"player_client": [client]}}
+        try:
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                ydl.download([url])
+            break
+        except Exception as e:
+            errors.append(f"{client}: {e}")
+            logger.warning("yt-dlp client %r failed — trying next", client)
+            for partial in work_dir.glob("video.*.part"):
+                partial.unlink(missing_ok=True)
+    else:
+        raise RuntimeError("Failed to download video from YouTube: " + "; ".join(errors[-2:]))
 
-    candidates = sorted(work_dir.glob("video.*"))
+    candidates = [p for p in sorted(work_dir.glob("video.*")) if p.suffix in VIDEO_SUFFIXES]
     if not candidates:
         raise RuntimeError("yt-dlp finished but no video file was produced.")
     # Normalize to .mp4 for ffmpeg's benefit
@@ -151,26 +172,41 @@ def extract_frames(video_path: Path, work_dir: Path) -> list[dict]:
     frames = []
     for i, timestamp in enumerate(timestamps):
         out_path = frames_dir / f"frame_{i + 1:04d}.jpg"
-        _run(
-            [
-                "ffmpeg",
-                "-y",
-                "-ss",
-                f"{timestamp:.1f}",
-                "-i",
-                str(video_path),
-                "-frames:v",
-                "1",
-                "-vf",
-                "scale=640:-2",
-                "-q:v",
-                "4",
-                str(out_path),
-                "-loglevel",
-                "error",
-            ]
-        )
-        frames.append({"timestamp": timestamp, "file": str(out_path)})
+        # Seeking to the very end of a file can land past the video stream's
+        # last frame (container duration > stream duration), which makes the
+        # mjpeg encoder fail. Retry slightly earlier before giving up on a ts.
+        attempts = [timestamp]
+        if timestamp > 0.5:
+            attempts.append(timestamp - 0.4)
+        for attempt in attempts:
+            try:
+                _run(
+                    [
+                        "ffmpeg",
+                        "-y",
+                        "-ss",
+                        f"{attempt:.1f}",
+                        "-i",
+                        str(video_path),
+                        "-frames:v",
+                        "1",
+                        "-vf",
+                        "scale=640:-2",
+                        "-q:v",
+                        "4",
+                        str(out_path),
+                        "-loglevel",
+                        "error",
+                    ]
+                )
+                frames.append({"timestamp": attempt, "file": str(out_path)})
+                break
+            except RuntimeError:
+                logger.warning("Frame extraction failed at %.1fs", attempt)
+        else:
+            logger.warning("Skipping frame at %.1fs (ffmpeg could not encode it)", timestamp)
+    if not frames:
+        raise RuntimeError("Could not extract any frames from the video.")
     logger.info(
         "Extracted %d frames from %.0fs video (%d scenes detected)",
         len(frames),

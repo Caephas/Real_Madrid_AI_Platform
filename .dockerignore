@@ -1,0 +1,16 @@
+.git
+.env
+.env.*
+!.env.example
+data/*
+!data/raw/
+data/raw/*
+!data/raw/la_liga_10_seasons.csv
+deploy/
+frontend/node_modules/
+frontend/dist/
+tests/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/

@@ -7,6 +7,8 @@ import uuid
 
 from fastapi import FastAPI, Request
 
+from app.config import settings
+
 logger = logging.getLogger("app")
 
 
@@ -14,9 +16,10 @@ def setup_middleware(app: FastAPI) -> None:
     """Attach CORS and request logging middleware to the FastAPI app."""
     from fastapi.middleware.cors import CORSMiddleware
 
+    origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://localhost:8080", "http://localhost:3000"],
+        allow_origins=origins,
         allow_methods=["*"],
         allow_headers=["*"],
     )

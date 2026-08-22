@@ -248,7 +248,12 @@ def refresh(force: bool = False) -> bool:
 
 
 def _refresh_via_football_data(raw_path: str) -> bool:
-    """Fetch the current (or last) season from football-data.co.uk and update stats."""
+    """Fetch the current + previous season from football-data.co.uk and update stats.
+
+    The current season alone rarely has enough matches per team to compute the
+    rolling window (5 games), so the previous season is merged in for
+    continuity. Both files are freely downloadable without an API key.
+    """
     from pipeline.fetch_season import fetch_season, merge_into_raw
 
     year = datetime.now().year
@@ -256,6 +261,7 @@ def _refresh_via_football_data(raw_path: str) -> bool:
         f"{year % 100:02d}{(year + 1) % 100:02d}",  # e.g. 2627
         f"{(year - 1) % 100:02d}{year % 100:02d}",  # e.g. 2526
     ]
+    fetched = 0
     for code in season_codes:
         try:
             out = fetch_season(code, "data/raw/", raw_path, source="football-data")
@@ -263,11 +269,13 @@ def _refresh_via_football_data(raw_path: str) -> bool:
             logger.warning("fetch_season %s failed: %s", code, e)
             continue
         merge_into_raw(out, raw_path, base_path=raw_path)
-        matches = pd.read_csv(raw_path)
-        matches["date"] = pd.to_datetime(matches["date"])
-        compute_and_upsert(matches)
-        return True
-    return False
+        fetched += 1
+    if not fetched:
+        return False
+    matches = pd.read_csv(raw_path)
+    matches["date"] = pd.to_datetime(matches["date"])
+    compute_and_upsert(matches)
+    return True
 
 
 if __name__ == "__main__":

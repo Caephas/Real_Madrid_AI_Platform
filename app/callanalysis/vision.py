@@ -17,7 +17,7 @@ from app.config import settings
 
 logger = logging.getLogger("app.callanalysis.vision")
 
-VISION_MODEL = "gemini-2.0-flash"
+VISION_MODEL = settings.gemini_model
 
 SYSTEM_PROMPT = """You are an expert football referee analyst with deep knowledge of the FIFA Laws of the Game.
 You are shown a sequence of frames from a single match incident and must judge the referee's decision.
@@ -99,6 +99,7 @@ def analyze_frames(
     }
     text = None
     last_error: Exception | None = None
+    resp = None
     for attempt in range(3):
         try:
             resp = httpx.post(url, json=payload, timeout=180)
@@ -107,7 +108,8 @@ def analyze_frames(
             break
         except httpx.HTTPError as e:
             last_error = e
-            if resp.status_code in (429, 500, 502, 503, 504):
+            status = getattr(resp, "status_code", None)
+            if status in (429, 500, 502, 503, 504):
                 logger.warning("Vision model transient failure (%s) — retry %d", e, attempt + 1)
                 time.sleep(2**attempt)
                 continue

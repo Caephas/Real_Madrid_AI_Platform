@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2"
     gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.6-flash"
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-v4-flash"
@@ -25,6 +26,9 @@ class Settings(BaseSettings):
 
     # Model
     model_dir: str = "./models"
+
+    # CORS: comma-separated origins. "*" allows any origin (public API, no auth).
+    cors_origins: str = "*"
 
     # Real Madrid team ID in API-Football
     real_madrid_team_id: int = 541

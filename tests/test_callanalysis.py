@@ -2,11 +2,15 @@
 
 import shutil
 import subprocess
+import sys
+import types
+from pathlib import Path
 
 import pytest
 
 import app.callanalysis.analyzer as analyzer
 import app.callanalysis.router as router_module
+import app.callanalysis.vision as vision
 from app.callanalysis import video
 from app.callanalysis.analyzer import JobStore
 from app.callanalysis.laws import get_laws_context
@@ -119,3 +123,147 @@ def test_laws_context_reads_relevant_laws():
     assert "captain-only" in ctx
     assert "PENALTY" in ctx
     assert "READ THESE BEFORE JUDGING" in ctx
+
+
+def test_download_youtube_falls_back_to_android(tmp_path, monkeypatch):
+    """When YouTube 403s the default player client, retry the android client."""
+
+    class FakeYtDlp:
+        attempts: list[str] = []
+
+        class YoutubeDL:
+            def __init__(self, opts):
+                self.opts = opts
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def download(self, urls):
+                client = (
+                    self.opts.get("extractor_args", {})
+                    .get("youtube", {})
+                    .get("player_client", ["default"])[0]
+                )
+                FakeYtDlp.attempts.append(client)
+                if client == "default":
+                    raise RuntimeError("unable to download video data: HTTP Error 403")
+                out = Path(self.opts["outtmpl"].replace("%(ext)s", "mp4"))
+                out.write_bytes(b"fake-video")
+
+    monkeypatch.setitem(sys.modules, "yt_dlp", FakeYtDlp)
+
+    result = video.download_youtube("https://www.youtube.com/watch?v=abc123", tmp_path)
+
+    assert FakeYtDlp.attempts == ["default", "android"]
+    assert result == tmp_path / "video.mp4"
+    assert result.read_bytes() == b"fake-video"
+
+
+def test_extract_frames_retries_bad_timestamp(tmp_path, monkeypatch):
+    """A seek past the stream's last frame is retried slightly earlier, not fatal."""
+    duration = "4.0"
+
+    def fake_run(cmd, **kwargs):
+        if cmd[0] == "ffprobe":
+            return types.SimpleNamespace(stdout=duration, stderr="", returncode=0)
+        if "select='gt(scene," in " ".join(cmd):
+            # Two scene changes plus the forced end timestamp (3.8) in the mix.
+            return types.SimpleNamespace(
+                stdout="", stderr="pts_time:0.5\npts_time:1.5\n", returncode=0
+            )
+        if "-frames:v" in cmd:
+            # 3.8 sits past the video stream's end; everything else succeeds.
+            if cmd[cmd.index("-ss") + 1] == "3.8":
+                return types.SimpleNamespace(stdout="", stderr="", returncode=1)
+            return types.SimpleNamespace(stdout="", stderr="", returncode=0)
+        return types.SimpleNamespace(stdout="", stderr="", returncode=0)
+
+    monkeypatch.setattr(video.subprocess, "run", fake_run)
+    video_path = tmp_path / "clip.mp4"
+    video_path.write_bytes(b"fake")
+
+    frames = video.extract_frames(video_path, tmp_path)
+
+    timestamps = [f["timestamp"] for f in frames]
+    assert 3.8 not in timestamps
+    assert 3.4 in timestamps  # the retry at timestamp - 0.4
+    assert len(frames) == 4  # 0.0 + 2 scene changes + the retried end timestamp
+
+
+def test_analyze_frames_retries_transient_failure(tmp_path, monkeypatch):
+    """A 500 from the vision API is retried before succeeding."""
+
+    class FakeResponse:
+        def __init__(self, status_code, body=None):
+            self.status_code = status_code
+            self._body = body
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                raise httpx.HTTPStatusError(
+                    "boom", request=None, response=self  # type: ignore[arg-type]
+                )
+
+        def json(self):
+            return self._body
+
+    import httpx
+
+    calls = {"n": 0}
+
+    def fake_post(url, **kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return FakeResponse(500)
+        return FakeResponse(
+            200,
+            {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "text": '{"verdict":"correct_call","decision_type":"foul",'
+                                    '"confidence":90,"summary":"ok","reasoning":[],'
+                                    '"laws_cited":["Law 12"],"key_frames":[]}'
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+    monkeypatch.setattr(vision.httpx, "post", fake_post)
+    monkeypatch.setattr(vision.time, "sleep", lambda s: None)
+    frame_file = tmp_path / "f.jpg"
+    frame_file.write_bytes(b"jpeg")
+
+    result = vision.analyze_frames([{"timestamp": 1.0, "file": str(frame_file)}])
+
+    assert calls["n"] == 2
+    assert result["verdict"] == "correct_call"
+
+
+def test_analyze_frames_connect_error_is_clean(tmp_path, monkeypatch):
+    """A connection error on the first attempt must not NameError on resp."""
+    import httpx
+
+    def fake_post(url, **kwargs):
+        raise httpx.ConnectError("connection refused")
+
+    monkeypatch.setattr(vision.httpx, "post", fake_post)
+    frame_file = tmp_path / "f.jpg"
+    frame_file.write_bytes(b"jpeg")
+
+    with pytest.raises(RuntimeError, match="Vision model unavailable"):
+        vision.analyze_frames([{"timestamp": 1.0, "file": str(frame_file)}])
+
+
+def test_vision_model_tracks_settings():
+    from app.config import settings
+
+    assert vision.VISION_MODEL == settings.gemini_model

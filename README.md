@@ -150,6 +150,19 @@ once running.
 
 ---
 
+## Deployment (free tier)
+
+The app deploys to Firebase Hosting (frontend) + Cloud Run (backend) + Neon
+(Postgres), all within their free allowances. See
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full guide.
+
+```bash
+make deploy-backend                          # Cloud Run container
+make deploy-frontend API_BASE=https://real-madrid-api-xxx-ew.a.run.app
+```
+
+---
+
 ## API Reference
 
 All endpoints are served from `http://localhost:8000` (Swagger UI at `/docs`).

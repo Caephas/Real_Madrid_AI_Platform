@@ -2,7 +2,7 @@
 # Real Madrid AI Platform — Makefile
 # ============================================
 
-.PHONY: setup dev test pipeline lint clean stop help refresh
+.PHONY: setup dev test pipeline lint clean stop help refresh deploy deploy-frontend deploy-backend deploy-db
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -22,10 +22,12 @@ start: ## Start everything: db + backend + frontend (single command)
 	docker compose up -d db
 	@echo "PostgreSQL ready on :5433"
 	@echo "Checking if team_stats need refresh..."
-	@python3 -m pipeline.refresh_stats --check-only 2>/dev/null && \
-		echo "Stats are stale — refreshing in background..." && \
+	@if python3 -m pipeline.refresh_stats --check-only 2>/dev/null; then \
+		echo "Stats are stale — refreshing in background..."; \
 		python3 -m pipeline.refresh_stats & \
-	|| echo "Stats are fresh, skipping refresh"
+	else \
+		echo "Stats are fresh, skipping refresh"; \
+	fi
 	uvicorn app.main:app --reload --port 8000 &
 	@sleep 2
 	cd frontend && npm run dev
@@ -79,6 +81,31 @@ pipeline-train: ## Train model only (assumes cleaned data exists)
 
 refresh: ## Refresh team_stats: scrape current season from fbref, update rolling averages
 	python3 -m pipeline.refresh_stats --force
+
+# ---------- Deploy ----------
+
+deploy-frontend: ## Build SPA and deploy to Firebase Hosting (free Spark plan)
+	cd frontend && VITE_API_BASE=$(API_BASE) npm run build
+	firebase deploy --only hosting
+
+deploy-backend: ## Build and deploy backend container to Cloud Run (free tier)
+	gcloud run deploy real-madrid-api \
+		--project real-madrid-ai \
+		--region europe-west1 \
+		--source . \
+		--allow-unauthenticated \
+		--memory 2Gi \
+		--max-instances 1 \
+		--timeout 900 \
+		--env-vars-file deploy/env.json
+
+deploy-db: ## Run migrations against the production database (DATABASE_URL=...)
+	DATABASE_URL=$(DATABASE_URL) alembic upgrade head
+
+deploy: ## Full deploy: migrations + backend + frontend (see docs/DEPLOYMENT.md)
+	$(MAKE) deploy-db
+	$(MAKE) deploy-backend
+	$(MAKE) deploy-frontend
 
 # ---------- Quality ----------
 

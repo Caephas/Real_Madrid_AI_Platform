@@ -9,6 +9,7 @@ requires-python = ">=3.11,<3.13"
 dependencies = [
     # Core
     "fastapi>=0.115,<0.116",
+    "starlette>=0.41,<0.42",
     "uvicorn[standard]>=0.34,<0.35",
     "pydantic-settings>=2.0,<3.0",
 
@@ -33,6 +34,7 @@ dependencies = [
     "requests>=2.32,<3.0",
 
     # Call Review
+    "python-multipart>=0.0.9,<1.0",
     "yt-dlp>=2025.1.15,<2027",
 
     # Scheduling

@@ -9,8 +9,10 @@ build/
 
 # Environment
 .env
+.env.production
 .venv/
 venv/
+deploy/env.json
 
 # Models (trained artifacts — large files)
 models/*.pkl
